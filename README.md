@@ -1,180 +1,280 @@
 # Bookmarks Bar Switcher
 
-A Chrome extension that allows you to create and switch between different bookmark bar states (e.g., Personal, Work, Development) with **automatic saving** capabilities.
+A professional Chrome extension for switching between different bookmark bar states (Personal, Work, Development, etc.) with automatic saving capabilities.
 
-## ✨ Features
+## 🚀 Features
 
-- **Save Current State**: Save your current bookmarks bar as a named state
-- **Create New States**: Create empty states to start fresh
-- **Switch Between States**: Easily switch between different bookmark configurations
-- **Automatic Saving**: Auto-save at configurable intervals and when switching states
-- **State Management**: View, rename, and delete saved states
-- **Clean Organization**: State folders are visible in "Other Bookmarks" for easy navigation
+- **State Management**: Create and switch between different bookmark bar configurations
+- **Auto-Save**: Automatic saving with configurable intervals
+- **Cross-Device Sync**: Chrome sync integration for seamless experience
+- **Export/Import**: Backup and restore your bookmark states
+- **Smart Recovery**: Automatic state recovery and corruption detection
+- **First-Time Setup**: User-friendly onboarding experience
 
-## 🚀 New Features
-
-### **Cross-Device Sync**
-- **Automatic Sync**: States sync automatically across all your Chrome devices
-- **Single Source of Truth**: Your bookmark states are always up-to-date everywhere
-- **No Manual Transfer**: Switch devices and your states are already there
-
-### **Export/Import Functionality**
-- **Export States**: Download all your states as a JSON file for backup
-- **Import States**: Restore states from a previously exported file
-- **Version Control**: Export files include version and date information
-- **Easy Sharing**: Share state configurations with others
-
-### **Smart Auto-Saving**
-- **Interval-based**: Automatically save every 1, 5, 10, 15, or 30 minutes
-- **State-switch saving**: Automatically save current state when switching to another state
-- **Configurable**: Toggle auto-save on/off and adjust intervals
-- **Efficient**: Only saves when there are actual changes, not on every bookmark modification
-
-### **How Auto-Save Works**
-1. **Interval Saving**: Saves your current bookmarks bar at the specified interval
-2. **Switch Saving**: When you switch states, your current configuration is automatically saved
-3. **Manual Override**: You can still manually save anytime with the "Save Current State" button
-4. **Smart Detection**: Only saves when there's a current state name set
-
-## 📁 How It Works
-
-The extension works by:
-
-1. **State Folders**: Creates clean, named folders in "Other Bookmarks" (e.g., "Personal", "Work", "Dev")
-2. **Visible Structure**: You can see all your inactive states in "Other Bookmarks" and navigate to them
-3. **Clean Switching**: When switching states, the current bookmarks bar is saved to its state folder, and the target state is restored
-4. **Automatic Backup**: Your current configuration is automatically saved based on your settings
-
-## 🛠️ Installation
-
-### Method 1: Load as Unpacked Extension (Development)
-
-1. Download or clone this repository
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right corner
-4. Click "Load unpacked" and select the extension folder
-5. The extension should now appear in your extensions list
-
-### Method 2: Build and Install
-
-1. Clone this repository
-2. Run `npm install` (if you have Node.js installed)
-3. Build the extension using your preferred build tool
-4. Follow the "Load as Unpacked Extension" steps above
-
-## 📖 Usage
-
-### Getting Started
-
-1. Click the Bookmarks Bar Switcher extension icon in your Chrome toolbar
-2. Enter a name for your current bookmarks bar state (e.g., "Personal")
-3. Click "Save Current State" to save your current configuration
-
-### Auto-Save Configuration
-
-1. **Enable Auto-Save**: Toggle the switch to enable automatic saving
-2. **Set Interval**: Choose how often to auto-save (1, 5, 10, 15, or 30 minutes)
-3. **Monitor Status**: Check the console for auto-save activity
-
-### Creating New States
-
-1. Click "Create New State" in the extension popup
-2. Enter a name for the new state
-3. The new state will be created with an empty bookmarks bar
-
-### Switching Between States
-
-1. In the "Saved States" section, click "Switch To" next to any state
-2. Your current bookmarks bar will be automatically saved (if auto-save is enabled)
-3. The selected state will be restored to your bookmarks bar
-
-### Managing States
-
-- **View States**: All saved states are listed in the popup
-- **Delete States**: Click the "Delete" button to remove unwanted states
-- **Refresh**: Use the "Refresh" button to update the states list
-
-## ⚙️ Settings
-
-### Auto-Save Options
-
-- **Toggle**: Enable/disable automatic saving
-- **Interval**: Choose from 1, 5, 10, 15, or 30 minutes
-- **Smart Saving**: Automatically saves when switching states
-
-### Manual Override
-
-- **Save Current State**: Manually save anytime
-- **Immediate Control**: Override auto-save settings when needed
-
-## 📁 File Structure
+## 🏗️ Project Structure
 
 ```
-tabs-manager/
-├── manifest.json          # Extension configuration with alarms permission
-├── popup.html            # Popup interface with settings
-├── popup.js              # Popup functionality and auto-save controls
-├── background.js         # Background service worker with auto-save logic
-├── styles.css            # Styling including toggle switch
-├── README.md            # This file
-└── icons/               # Icon files
+bookmark-bar-switcher/
+├── src/                    # Source code
+│   ├── manifest.json      # Extension manifest
+│   ├── popup/            # Popup interface
+│   │   ├── popup.html
+│   │   ├── popup.js
+│   │   └── styles.css
+│   ├── background/       # Background scripts
+│   │   └── background.js
+│   ├── icons/           # Extension icons
+│   └── utils/           # Utility functions
+├── dist/                # Built files (generated)
+├── builds/              # Packaged extensions (generated)
+├── tests/               # Test files
+├── scripts/             # Build scripts
+└── docs/                # Documentation
 ```
 
-## 🔐 Permissions
+## 🛠️ Development Setup
 
-This extension requires the following permissions:
+### Prerequisites
 
-- **`bookmarks`**: To read, create, and modify bookmarks
-- **`storage`**: To save extension data and settings with cross-device sync
-- **`alarms`**: To schedule automatic saving at intervals
+- **Node.js** 16.0.0 or higher
+- **npm** 8.0.0 or higher
+- **Chrome** browser for testing
 
-## 🌐 Browser Compatibility
+### Installation
 
-- Chrome 88+ (Manifest V3)
-- Edge 88+ (Chromium-based)
-- Other Chromium-based browsers
+```bash
+# Clone the repository
+git clone <repository-url>
+cd bookmark-bar-switcher
 
-## 🔧 Troubleshooting
+# Install dependencies
+npm install
+
+# Install Git hooks (husky)
+npm run postinstall
+```
+
+## 📦 Build Commands
+
+### Development
+
+```bash
+# Watch mode for development
+npm run dev
+
+# Build for development
+npm run build
+```
+
+### Production
+
+```bash
+# Build for Chrome
+npm run build
+```
+
+### Package Management
+
+```bash
+# Clean build artifacts
+npm run clean
+
+# Package extension for distribution
+npm run package
+```
+
+## 🧪 Testing
+
+### Run Tests
+
+```bash
+# Run all tests
+npm test
+
+# Watch mode for development
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+```
+
+### Test Structure
+
+- **Unit Tests**: Individual function testing
+- **Integration Tests**: API interaction testing
+- **Mock Chrome APIs**: Simulated extension environment
+
+## 🔍 Code Quality
+
+### Linting
+
+```bash
+# Check code quality
+npm run lint
+
+# Auto-fix issues
+npm run lint:fix
+```
+
+### Formatting
+
+```bash
+# Format all code
+npm run format
+```
+
+### Validation
+
+```bash
+# Run all quality checks
+npm run validate
+```
+
+## 📱 Browser Compatibility
+
+### Supported Browsers
+
+- **Chrome** 88+
+- **Edge** 88+ (Chromium-based)
+- **Opera** 74+ (Chromium-based)
+
+## 🚀 Distribution
+
+### Chrome Web Store
+
+1. Build the extension: `npm run build`
+2. Upload `builds/chrome.zip` to Chrome Web Store
+3. Complete store listing and submit for review
+
+### Manual Installation
+
+1. Build the extension: `npm run build`
+2. Open Chrome/Firefox extensions page
+3. Enable Developer mode
+4. Load unpacked extension from `dist/` folder
+
+## 🔧 Development Workflow
+
+### 1. Development
+
+```bash
+# Start development mode
+npm run dev
+
+# Make changes to source files
+# Extension automatically reloads
+```
+
+### 2. Testing
+
+```bash
+# Run tests after changes
+npm test
+
+# Check code quality
+npm run lint
+```
+
+### 3. Building
+
+```bash
+# Build for testing
+npm run build
+
+# Package for distribution
+npm run package:chrome
+```
+
+### 4. Deployment
+
+```bash
+# Build extension
+npm run build
+
+# Upload to Chrome Web Store
+```
+
+## 📋 Development Checklist
+
+### Before Committing
+
+- [ ] Code passes linting: `npm run lint`
+- [ ] All tests pass: `npm test`
+- [ ] Code is formatted: `npm run format`
+- [ ] Build succeeds: `npm run build`
+
+### Before Release
+
+- [ ] All tests pass with coverage: `npm run test:coverage`
+- [ ] Build succeeds: `npm run build`
+- [ ] Extension loads without errors
+- [ ] All features work as expected
+- [ ] Documentation is updated
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Extension not working**: Make sure you've enabled Developer mode and loaded the extension correctly
-2. **Bookmarks not switching**: Check that you have the necessary permissions enabled
-3. **States not saving**: Verify that Chrome has permission to access bookmarks
-4. **Auto-save not working**: Check that auto-save is enabled and you have a current state name set
+#### Build Failures
 
-### Data Location
+```bash
+# Clean and rebuild
+npm run clean
+npm run build
+```
 
-- **State Folders**: Located in "Other Bookmarks" with clean names
-- **Extension Data**: Stored in Chrome's sync storage (automatically synced across devices)
-- **Auto-save Settings**: Stored in sync storage and persist across all devices
-- **Storage Limit**: 100KB total for all synced data (sufficient for most users)
+#### Test Failures
 
-### Console Logging
+```bash
+# Clear Jest cache
+npx jest --clearCache
+npm test
+```
 
-The extension provides detailed console logging for debugging:
-- Auto-save events and timing
-- State switching operations
-- Bookmark operations and errors
+#### Linting Errors
 
-## 🚀 Development
+```bash
+# Auto-fix issues
+npm run lint:fix
 
-### Building
+# Check specific files
+npx eslint src/popup/popup.js
+```
 
-To build the extension for distribution:
+### Debug Mode
 
-1. Ensure all files are present and properly configured
-2. Test the extension thoroughly, especially auto-save functionality
-3. Package the extension using Chrome's extension packaging tools
+```bash
+# Enable verbose logging
+DEBUG=* npm run build
 
-### Contributing
+# Run tests with detailed output
+npm run test -- --verbose
+```
 
-Feel free to submit issues, feature requests, or pull requests to improve this extension.
+## 📚 Documentation
+
+- **API Reference**: See inline code comments
+- **Chrome Extensions**: [Official Documentation](https://developer.chrome.com/docs/extensions/)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
 ## 📄 License
 
-This project is open source and available under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-This extension was inspired by the original "Bookmarks Bar Switcher" extension by Jiajia Wang, which is no longer available on the Chrome Web Store. The auto-save functionality is a new enhancement that makes the extension even more powerful and user-friendly.
+- Chrome Extensions team for the excellent API
+- Mozilla for WebExtensions standardization
+- Community contributors and testers
+
+---
+
+**Happy coding! 🚀**
