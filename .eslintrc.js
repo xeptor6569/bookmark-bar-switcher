@@ -20,7 +20,7 @@ module.exports = {
   },
   rules: {
     // Code quality rules
-    'no-console': 'warn',
+    'no-console': 'off', // Allow console statements for extension debugging
     'no-debugger': 'error',
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'prefer-const': 'error',

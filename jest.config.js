@@ -20,11 +20,8 @@ module.exports = {
       statements: 70
     }
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
-  },
-  transform: {
-    '^.+\\.js$': 'babel-jest'
   },
   testPathIgnorePatterns: [
     '/node_modules/',

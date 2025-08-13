@@ -3,11 +3,7 @@
   "name": "Bookmarks Bar Switcher",
   "version": "0.0.1",
   "description": "Switch between different bookmark bar states (Personal, Work, Development, etc.) with automatic saving",
-  "permissions": [
-    "bookmarks",
-    "storage",
-    "alarms"
-  ],
+  "permissions": ["bookmarks", "storage", "alarms"],
   "host_permissions": [],
   "action": {
     "default_popup": "popup.html",

@@ -88,11 +88,5 @@ global.document.createElement = jest.fn((tagName) => ({
   textContent: '',
 }));
 
-// Mock window.location
-global.window.location = {
-  href: 'chrome-extension://mock-id/popup.html',
-  origin: 'chrome-extension://mock-id',
-  protocol: 'chrome-extension:',
-  host: 'mock-id',
-  pathname: '/popup.html',
-};
+// Note: window.location is not mocked due to JSDOM restrictions
+// Tests that need location should mock it locally
