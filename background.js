@@ -19,12 +19,53 @@ chrome.runtime.onInstalled.addListener(async () => {
 // Load auto-save settings from storage
 async function loadAutoSaveSettings() {
   try {
-    const result = await chrome.storage.local.get(['autoSaveEnabled', 'autoSaveIntervalMinutes', 'currentStateName']);
+    // Try to load from sync storage first
+    let result = await chrome.storage.sync.get(['autoSaveEnabled', 'autoSaveIntervalMinutes', 'currentStateName']);
+    
+    // If no data in sync, try to migrate from local storage
+    if (!result.autoSaveEnabled && !result.currentStateName) {
+      console.log('No sync data found, checking for local data to migrate...');
+      const localResult = await chrome.storage.local.get(['autoSaveEnabled', 'autoSaveIntervalMinutes', 'currentStateName']);
+      
+      if (localResult.autoSaveEnabled || localResult.currentStateName) {
+        console.log('Found local data, migrating to sync storage...');
+        await migrateToSyncStorage(localResult);
+        result = localResult;
+      }
+    }
+    
     autoSaveEnabled = result.autoSaveEnabled || false;
     autoSaveInterval = result.autoSaveIntervalMinutes || 5;
     currentStateName = result.currentStateName || null;
+    
+    console.log('Loaded settings:', { autoSaveEnabled, autoSaveInterval, currentStateName });
   } catch (error) {
     console.error('Error loading auto-save settings:', error);
+  }
+}
+
+// Migrate data from local storage to sync storage
+async function migrateToSyncStorage(localData) {
+  try {
+    // Migrate settings
+    await chrome.storage.sync.set({
+      autoSaveEnabled: localData.autoSaveEnabled || false,
+      autoSaveIntervalMinutes: localData.autoSaveIntervalMinutes || 5,
+      currentStateName: localData.currentStateName || null
+    });
+    
+    // Migrate bookmark states if they exist
+    const localStates = await chrome.storage.local.get(['bookmarkStates']);
+    if (localStates.bookmarkStates) {
+      await chrome.storage.sync.set({ bookmarkStates: localStates.bookmarkStates });
+      console.log('Migrated bookmark states to sync storage');
+    }
+    
+    // Clear local storage after successful migration
+    await chrome.storage.local.clear();
+    console.log('Successfully migrated from local to sync storage');
+  } catch (error) {
+    console.error('Migration failed:', error);
   }
 }
 
@@ -219,7 +260,7 @@ async function saveCurrentState(stateName) {
       });
     }
 
-    await chrome.storage.local.set({ bookmarkStates: states });
+    await chrome.storage.sync.set({ bookmarkStates: states });
 
     return { success: true, message: `State "${stateName}" saved successfully` };
   } catch (error) {
@@ -251,7 +292,7 @@ async function createNewState(stateName) {
       lastUpdated: new Date().toISOString()
     });
 
-    await chrome.storage.local.set({ bookmarkStates: states });
+    await chrome.storage.sync.set({ bookmarkStates: states });
 
     return { success: true, message: `New state "${stateName}" created successfully` };
   } catch (error) {
@@ -343,7 +384,7 @@ async function switchToState(stateName) {
     }
 
     // Update current state name
-    await chrome.storage.local.set({ currentStateName: stateName });
+    await chrome.storage.sync.set({ currentStateName: stateName });
     currentStateName = stateName;
     console.log(`Updated current state name to: ${stateName}`);
 
@@ -378,7 +419,7 @@ async function deleteState(stateName) {
 
     // Remove from states list
     states.splice(stateIndex, 1);
-    await chrome.storage.local.set({ bookmarkStates: states });
+    await chrome.storage.sync.set({ bookmarkStates: states });
 
     return { success: true, message: `State "${stateName}" deleted successfully` };
   } catch (error) {
@@ -442,12 +483,12 @@ async function copyBookmarkTree(sourceBookmark, targetParentId) {
 
 // Helper function to get stored states
 async function getStoredStates() {
-  const result = await chrome.storage.local.get(['bookmarkStates']);
+  const result = await chrome.storage.sync.get(['bookmarkStates']);
   return result.bookmarkStates || [];
 }
 
 // Helper function to get current state name
 async function getCurrentStateName() {
-  const result = await chrome.storage.local.get(['currentStateName']);
+  const result = await chrome.storage.sync.get(['currentStateName']);
   return result.currentStateName || null;
 }

@@ -7,9 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const status = document.getElementById('status');
   const autoSaveToggle = document.getElementById('autoSaveToggle');
   const autoSaveInterval = document.getElementById('autoSaveInterval');
+  const exportStatesBtn = document.getElementById('exportStates');
+  const importStatesBtn = document.getElementById('importStates');
+  const importFileInput = document.getElementById('importFileInput');
+  const syncIndicator = document.getElementById('syncIndicator');
+  const syncText = document.getElementById('syncText');
 
   // Load current state name and settings from storage
-  chrome.storage.local.get(['currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes'], function(result) {
+  chrome.storage.sync.get(['currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes'], function(result) {
     if (result.currentStateName) {
       currentStateNameInput.value = result.currentStateName;
     }
@@ -23,24 +28,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // Check sync storage status
+  checkSyncStatus();
+
   // Auto-save toggle handler
   autoSaveToggle.addEventListener('change', function() {
     const enabled = this.checked;
     const interval = parseInt(autoSaveInterval.value);
     
-    chrome.storage.local.set({ 
+    chrome.storage.sync.set({ 
       autoSaveEnabled: enabled,
       autoSaveIntervalMinutes: interval
+    }, () => {
+      if (chrome.runtime.lastError) {
+        showStatus(`Failed to save settings: ${chrome.runtime.lastError.message}`, 'error');
+        return;
+      }
+      
+      // Send message to background script to update auto-save
+      chrome.runtime.sendMessage({
+        action: 'updateAutoSave',
+        enabled: enabled,
+        interval: interval
+      });
+      
+      showStatus(`Auto-save ${enabled ? 'enabled' : 'disabled'}`, 'info');
+      checkSyncStatus();
     });
-    
-    // Send message to background script to update auto-save
-    chrome.runtime.sendMessage({
-      action: 'updateAutoSave',
-      enabled: enabled,
-      interval: interval
-    });
-    
-    showStatus(`Auto-save ${enabled ? 'enabled' : 'disabled'}`, 'info');
   });
 
   // Auto-save interval handler
@@ -48,17 +62,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const interval = parseInt(this.value);
     const enabled = autoSaveToggle.checked;
     
-    chrome.storage.local.set({ autoSaveIntervalMinutes: interval });
-    
-    if (enabled) {
-      chrome.runtime.sendMessage({
-        action: 'updateAutoSave',
-        enabled: true,
-        interval: interval
-      });
+    chrome.storage.sync.set({ autoSaveIntervalMinutes: interval }, () => {
+      if (chrome.runtime.lastError) {
+        showStatus(`Failed to save interval: ${chrome.runtime.lastError.message}`, 'error');
+        return;
+      }
       
-      showStatus(`Auto-save interval updated to ${interval} minute${interval > 1 ? 's' : ''}`, 'info');
-    }
+      if (enabled) {
+        chrome.runtime.sendMessage({
+          action: 'updateAutoSave',
+          enabled: true,
+          interval: interval
+        });
+        
+        showStatus(`Auto-save interval updated to ${interval} minute${interval > 1 ? 's' : ''}`, 'info');
+      }
+      
+      checkSyncStatus();
+    });
   });
 
   // Save current state
@@ -75,8 +96,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }, function(response) {
       if (response.success) {
         showStatus(`Current state saved as "${stateName}"`, 'success');
-        chrome.storage.local.set({ currentStateName: stateName });
-        loadSavedStates();
+        chrome.storage.sync.set({ currentStateName: stateName }, () => {
+          if (chrome.runtime.lastError) {
+            showStatus(`Failed to save state name: ${chrome.runtime.lastError.message}`, 'error');
+            return;
+          }
+          loadSavedStates();
+          checkSyncStatus();
+        });
       } else {
         showStatus(response.error || 'Failed to save current state', 'error');
       }
@@ -206,6 +233,133 @@ document.addEventListener('DOMContentLoaded', function() {
       status.textContent = '';
       status.className = 'status';
     }, 3000);
+  }
+
+  // Export states
+  exportStatesBtn.addEventListener('click', exportStates);
+
+  // Import states
+  importStatesBtn.addEventListener('click', () => {
+    importFileInput.click();
+  });
+
+  importFileInput.addEventListener('change', handleImportFile);
+
+  // Check sync storage status
+  function checkSyncStatus() {
+    chrome.storage.sync.getBytesInUse(null, (bytesInUse) => {
+      if (chrome.runtime.lastError) {
+        updateSyncStatus('error', 'Sync not available');
+        return;
+      }
+      
+      const maxBytes = 100 * 1024; // 100KB limit for sync storage
+      const usagePercent = Math.round((bytesInUse / maxBytes) * 100);
+      
+      if (usagePercent > 90) {
+        updateSyncStatus('warning', `Storage: ${usagePercent}% used`);
+      } else {
+        updateSyncStatus('synced', `Storage: ${usagePercent}% used`);
+      }
+    });
+  }
+
+  
+
+  // Update sync status display
+  function updateSyncStatus(type, text) {
+    syncIndicator.className = `sync-indicator ${type}`;
+    syncText.textContent = text;
+    
+    if (type === 'synced') {
+      syncIndicator.textContent = '✅';
+    } else if (type === 'error') {
+      syncIndicator.textContent = '❌';
+    } else if (type === 'warning') {
+      syncIndicator.textContent = '⚠️';
+    } else {
+      syncIndicator.textContent = '🔄';
+    }
+  }
+
+  // Export states to JSON file
+  function exportStates() {
+    chrome.storage.sync.get(['bookmarkStates', 'currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes'], (data) => {
+      const exportData = {
+        version: '1.0.0',
+        exportDate: new Date().toISOString(),
+        data: data
+      };
+      
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], {type: 'application/json'});
+      
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `bookmarks-bar-switcher-${new Date().toISOString().split('T')[0]}.json`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      showStatus('States exported successfully', 'success');
+    });
+  }
+
+  // Handle import file selection
+  function handleImportFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const importData = JSON.parse(e.target.result);
+        
+        if (!importData.data || !importData.version) {
+          throw new Error('Invalid export file format');
+        }
+        
+        // Confirm import
+        if (confirm('This will replace all existing states. Are you sure?')) {
+          importStates(importData.data);
+        }
+      } catch (error) {
+        showStatus(`Import failed: ${error.message}`, 'error');
+      }
+    };
+    
+    reader.readAsText(file);
+    event.target.value = ''; // Reset file input
+  }
+
+  // Import states from data
+  function importStates(data) {
+    chrome.storage.sync.set(data, () => {
+      if (chrome.runtime.lastError) {
+        showStatus(`Import failed: ${chrome.runtime.lastError.message}`, 'error');
+        return;
+      }
+      
+      showStatus('States imported successfully', 'success');
+      loadSavedStates();
+      checkSyncStatus();
+      
+      // Update UI with imported data
+      if (data.currentStateName) {
+        currentStateNameInput.value = data.currentStateName;
+      }
+      
+      if (data.autoSaveEnabled !== undefined) {
+        autoSaveToggle.checked = data.autoSaveEnabled;
+      }
+      
+      if (data.autoSaveIntervalMinutes) {
+        autoSaveInterval.value = data.autoSaveIntervalMinutes;
+      }
+    });
   }
 
   // Load saved states on popup open

@@ -52,6 +52,21 @@
       <button id="refreshStates">Refresh</button>
     </div>
 
+    <div class="divider"></div>
+
+    <div class="data-management">
+      <h3>Data Management</h3>
+      <div class="data-actions">
+        <button id="exportStates" class="secondary">Export States</button>
+        <button id="importStates" class="secondary">Import States</button>
+        <input type="file" id="importFileInput" accept=".json" style="display: none;">
+      </div>
+      <div class="sync-status" id="syncStatus">
+        <span class="sync-indicator" id="syncIndicator">🔄</span>
+        <span class="sync-text" id="syncText">Syncing...</span>
+      </div>
+    </div>
+
     <div class="status" id="status"></div>
   </div>
 
