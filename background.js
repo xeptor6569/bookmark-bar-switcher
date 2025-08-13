@@ -8,23 +8,290 @@ let autoSaveAlarmName = 'bookmarksAutoSave';
 // Initialize auto-save settings on startup
 chrome.runtime.onStartup.addListener(async () => {
   await loadAutoSaveSettings();
+  // Temporarily disable aggressive validation on startup to prevent state loss
+  // await validateAndCleanupStates();
+  console.log('Startup validation disabled - use manual cleanup if needed');
   setupAutoSave();
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
   await loadAutoSaveSettings();
+  // Temporarily disable aggressive validation on install to prevent state loss
+  // await validateAndCleanupStates();
+  console.log('Install validation disabled - use manual cleanup if needed');
   setupAutoSave();
 });
 
 // Load auto-save settings from storage
 async function loadAutoSaveSettings() {
   try {
-    const result = await chrome.storage.local.get(['autoSaveEnabled', 'autoSaveIntervalMinutes', 'currentStateName']);
+    // Try to load from sync storage first
+    let result = await chrome.storage.sync.get(['autoSaveEnabled', 'autoSaveIntervalMinutes', 'currentStateName']);
+    
+    // If no data in sync, try to migrate from local storage
+    if (!result.autoSaveEnabled && !result.currentStateName) {
+      console.log('No sync data found, checking for local data to migrate...');
+      const localResult = await chrome.storage.local.get(['autoSaveEnabled', 'autoSaveIntervalMinutes', 'currentStateName']);
+      
+      if (localResult.autoSaveEnabled || localResult.currentStateName) {
+        console.log('Found local data, migrating to sync storage...');
+        await migrateToSyncStorage(localResult);
+        result = localResult;
+      }
+    }
+    
     autoSaveEnabled = result.autoSaveEnabled || false;
     autoSaveInterval = result.autoSaveIntervalMinutes || 5;
     currentStateName = result.currentStateName || null;
+    
+    console.log('Loaded settings:', { autoSaveEnabled, autoSaveInterval, currentStateName });
   } catch (error) {
     console.error('Error loading auto-save settings:', error);
+  }
+}
+
+// Migrate data from local storage to sync storage
+async function migrateToSyncStorage(localData) {
+  try {
+    // Migrate settings
+    await chrome.storage.sync.set({
+      autoSaveEnabled: localData.autoSaveEnabled || false,
+      autoSaveIntervalMinutes: localData.autoSaveIntervalMinutes || 5,
+      currentStateName: localData.currentStateName || null
+    });
+    
+    // Migrate bookmark states if they exist
+    const localStates = await chrome.storage.local.get(['bookmarkStates']);
+    if (localStates.bookmarkStates) {
+      await chrome.storage.sync.set({ bookmarkStates: localStates.bookmarkStates });
+      console.log('Migrated bookmark states to sync storage');
+    }
+    
+    // Clear local storage after successful migration
+    await chrome.storage.local.clear();
+    console.log('Successfully migrated from local to sync storage');
+  } catch (error) {
+    console.error('Migration failed:', error);
+  }
+}
+
+// Find state folder using hybrid approach (ID first, then name)
+async function findStateFolder(state) {
+  try {
+    console.log(`Finding folder for state "${state.name}": backupFolderId=${state.backupFolderId}, backupFolderName=${state.backupFolderName}`);
+    
+    // Try ID first (fast)
+    if (state.backupFolderId) {
+      try {
+        const folders = await chrome.bookmarks.get(state.backupFolderId);
+        console.log(`chrome.bookmarks.get(${state.backupFolderId}) returned:`, folders);
+        
+        if (folders && folders.length > 0) {
+          const folder = folders[0]; // chrome.bookmarks.get returns an array
+          console.log(`Found folder by ID: ${folder.title} (ID: ${folder.id})`);
+          return folder;
+        } else {
+          console.log(`Folder with ID ${state.backupFolderId} not found`);
+        }
+      } catch (error) {
+        console.warn(`Failed to find folder by ID ${state.backupFolderId}:`, error);
+      }
+    }
+    
+    // Fallback to name (reliable)
+    if (state.backupFolderName) {
+      try {
+        console.log(`Searching for folder by name: "${state.backupFolderName}"`);
+        const otherBookmarks = await chrome.bookmarks.getChildren('2');
+        console.log(`Found ${otherBookmarks.length} items in Other Bookmarks`);
+        const folder = otherBookmarks.find(f => f.title === state.backupFolderName);
+        if (folder) {
+          console.log(`Found folder by name: ${folder.title} (ID: ${folder.id})`);
+          return folder;
+        } else {
+          console.log(`No folder found with name: "${state.backupFolderName}"`);
+        }
+      } catch (error) {
+        console.warn(`Failed to find folder by name ${state.backupFolderName}:`, error);
+      }
+    }
+    
+    // If we still can't find it, try to recreate it
+    if (state.backupFolderName) {
+      console.log(`Attempting to recreate missing folder for state: ${state.name}`);
+      try {
+        const newFolder = await chrome.bookmarks.create({
+          parentId: '2', // Other Bookmarks
+          title: state.backupFolderName
+        });
+        
+        console.log(`Recreated folder: ${newFolder.title} (ID: ${newFolder.id})`);
+        
+        // Update the stored ID
+        await updateStateBackupFolderId(state.name, newFolder.id);
+        
+        return newFolder;
+      } catch (error) {
+        console.error(`Failed to recreate folder for state ${state.name}:`, error);
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`Error finding folder for state ${state.name}:`, error);
+    return null;
+  }
+}
+
+// Update state backup folder ID
+async function updateStateBackupFolderId(stateName, newFolderId) {
+  try {
+    const states = await getStoredStates();
+    const stateIndex = states.findIndex(s => s.name === stateName);
+    
+    if (stateIndex >= 0) {
+      states[stateIndex].backupFolderId = newFolderId;
+      states[stateIndex].lastUpdated = new Date().toISOString();
+      await chrome.storage.sync.set({ bookmarkStates: states });
+      console.log(`Updated backup folder ID for state "${stateName}" to ${newFolderId}`);
+    }
+  } catch (error) {
+    console.error(`Failed to update backup folder ID for state "${stateName}":`, error);
+  }
+}
+
+// Validate and cleanup corrupted states
+async function validateAndCleanupStates() {
+  try {
+    const states = await getStoredStates();
+    if (!states || states.length === 0) {
+      console.log('No states to validate');
+      return;
+    }
+
+    console.log(`Validating ${states.length} states...`);
+    console.log('Current states:', JSON.stringify(states, null, 2));
+    
+    const validStates = [];
+    let corruptedCount = 0;
+    let recoveredCount = 0;
+
+    for (const state of states) {
+      try {
+        // Try to find the backup folder
+        console.log(`Validating state "${state.name}" with backupFolderId: ${state.backupFolderId}, backupFolderName: ${state.backupFolderName}`);
+        const backupFolder = await findStateFolder(state);
+        if (backupFolder) {
+          // Update the state with the correct ID if it changed
+          if (backupFolder.id !== state.backupFolderId) {
+            state.backupFolderId = backupFolder.id;
+            state.lastUpdated = new Date().toISOString();
+            recoveredCount++;
+          }
+          validStates.push(state);
+          console.log(`State "${state.name}" is valid`);
+        } else {
+          // Don't immediately mark as corrupted - try to recreate the folder
+          if (state.backupFolderName) {
+            console.log(`Attempting to recreate folder for state "${state.name}" during validation...`);
+            try {
+              const newFolder = await chrome.bookmarks.create({
+                parentId: '2', // Other Bookmarks
+                title: state.backupFolderName
+              });
+              
+              console.log(`Recreated folder during validation: ${newFolder.title} (ID: ${newFolder.id})`);
+              
+              // Update the state with the new folder
+              state.backupFolderId = newFolder.id;
+              state.lastUpdated = new Date().toISOString();
+              recoveredCount++;
+              validStates.push(state);
+              console.log(`State "${state.name}" recovered during validation`);
+            } catch (error) {
+              console.error(`Failed to recreate folder for state "${state.name}" during validation:`, error);
+              console.warn(`State "${state.name}" has no valid backup folder and could not be recreated`);
+              corruptedCount++;
+            }
+          } else if (state.backupFolderId) {
+            // For existing states without backupFolderName, try to use the ID and add the name
+            console.log(`State "${state.name}" has no backup folder name, attempting to add it...`);
+            try {
+              const folder = await chrome.bookmarks.get(state.backupFolderId);
+              if (folder) {
+                // Add the missing backupFolderName
+                state.backupFolderName = folder.title;
+                state.lastUpdated = new Date().toISOString();
+                recoveredCount++;
+                validStates.push(state);
+                console.log(`State "${state.name}" recovered by adding missing backupFolderName: ${folder.title}`);
+              } else {
+                // Folder doesn't exist, try to recreate with state name
+                console.log(`Attempting to recreate folder for state "${state.name}" using state name...`);
+                try {
+                  const newFolder = await chrome.bookmarks.create({
+                    parentId: '2', // Other Bookmarks
+                    title: state.name
+                  });
+                  
+                  console.log(`Recreated folder using state name: ${newFolder.title} (ID: ${newFolder.id})`);
+                  
+                  // Update the state with the new folder and name
+                  state.backupFolderId = newFolder.id;
+                  state.backupFolderName = newFolder.title;
+                  state.lastUpdated = new Date().toISOString();
+                  recoveredCount++;
+                  validStates.push(state);
+                  console.log(`State "${state.name}" recovered by recreating folder`);
+                } catch (error) {
+                  console.error(`Failed to recreate folder for state "${state.name}":`, error);
+                  corruptedCount++;
+                }
+              }
+            } catch (error) {
+              console.warn(`Error checking folder for state "${state.name}":`, error);
+              corruptedCount++;
+            }
+          } else {
+            console.warn(`State "${state.name}" has no backup folder ID or name and cannot be recovered`);
+            corruptedCount++;
+          }
+        }
+      } catch (error) {
+        console.warn(`Error validating state "${state.name}":`, error);
+        corruptedCount++;
+      }
+    }
+
+    // Update storage with validated states
+    if (corruptedCount > 0 || recoveredCount > 0) {
+      console.log(`Found ${corruptedCount} corrupted states and recovered ${recoveredCount} states, updating...`);
+      await chrome.storage.sync.set({ bookmarkStates: validStates });
+      
+      // If current state is corrupted, clear it
+      const currentStateName = await getCurrentStateName();
+      if (currentStateName && !validStates.find(s => s.name === currentStateName)) {
+        console.log(`Current state "${currentStateName}" is corrupted, clearing...`);
+        await chrome.storage.sync.set({ currentStateName: null });
+      }
+      
+      let message = '';
+      if (corruptedCount > 0) {
+        message += `Removed ${corruptedCount} corrupted states. `;
+      }
+      if (recoveredCount > 0) {
+        message += `Recovered ${recoveredCount} states. `;
+      }
+      message += `${validStates.length} valid states remaining.`;
+      
+      console.log(`Cleanup complete. ${validStates.length} valid states remaining.`);
+      return message;
+    } else {
+      console.log('All states are valid');
+      return 'All states are valid. No cleanup needed.';
+    }
+  } catch (error) {
+    console.error('State validation failed:', error);
   }
 }
 
@@ -123,6 +390,48 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .then(result => sendResponse(result))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
+
+    case 'cleanupStates':
+      validateAndCleanupStates()
+        .then(result => sendResponse({ success: true, message: result }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+      
+    case 'restoreStates':
+      restoreStatesFromStorage()
+        .then(result => sendResponse({ success: true, message: result }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+      
+    case 'checkStorage':
+      checkStorageContents()
+        .then(result => sendResponse({ success: true, message: result.message, data: result.data }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+      
+    case 'recoverOrphaned':
+      scanAndRecoverOrphanedStates()
+        .then(result => sendResponse({ success: true, message: result }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+      
+    case 'fixStates':
+      fixImportedStates()
+        .then(result => sendResponse({ success: true, message: result }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+      
+    case 'validateStates':
+      validateAndCleanupStates()
+        .then(result => sendResponse({ success: true, message: result }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+      
+    case 'debugStates':
+      debugStates()
+        .then(result => sendResponse({ success: true, message: result.message, data: result.data }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
   }
 });
 
@@ -209,17 +518,19 @@ async function saveCurrentState(stateName) {
     
     if (existingStateIndex >= 0) {
       states[existingStateIndex].backupFolderId = stateFolder.id;
+      states[existingStateIndex].backupFolderName = stateFolder.title;
       states[existingStateIndex].lastUpdated = new Date().toISOString();
     } else {
       states.push({
         name: stateName,
         backupFolderId: stateFolder.id,
+        backupFolderName: stateFolder.title,
         created: new Date().toISOString(),
         lastUpdated: new Date().toISOString()
       });
     }
 
-    await chrome.storage.local.set({ bookmarkStates: states });
+    await chrome.storage.sync.set({ bookmarkStates: states });
 
     return { success: true, message: `State "${stateName}" saved successfully` };
   } catch (error) {
@@ -231,9 +542,12 @@ async function saveCurrentState(stateName) {
 // Create a new empty state
 async function createNewState(stateName) {
   try {
-    // Check if state already exists
+    // Ensure state name is unique
+    const uniqueStateName = await ensureUniqueStateName(stateName);
+    
+    // Check if state already exists (shouldn't happen with unique names, but safety check)
     const states = await getStoredStates();
-    if (states.find(s => s.name === stateName)) {
+    if (states.find(s => s.name === uniqueStateName)) {
       throw new Error('State with this name already exists');
     }
 
@@ -247,11 +561,12 @@ async function createNewState(stateName) {
     states.push({
       name: stateName,
       backupFolderId: stateFolder.id,
+      backupFolderName: stateFolder.title,
       created: new Date().toISOString(),
       lastUpdated: new Date().toISOString()
     });
 
-    await chrome.storage.local.set({ bookmarkStates: states });
+    await chrome.storage.sync.set({ bookmarkStates: states });
 
     return { success: true, message: `New state "${stateName}" created successfully` };
   } catch (error) {
@@ -274,7 +589,10 @@ async function switchToState(stateName) {
       throw new Error('State not found');
     }
     
+    console.log('Target state details:', JSON.stringify(targetState, null, 2));
+    
     if (!targetState.backupFolderId) {
+      console.error(`State "${stateName}" has no backupFolderId:`, targetState);
       throw new Error('State backup folder not found');
     }
     
@@ -307,8 +625,29 @@ async function switchToState(stateName) {
     // Restore the target state
     console.log(`Restoring from backup folder: ${targetState.backupFolderId}`);
     
-    // Get the children of the backup folder directly
-    const backupChildren = await chrome.bookmarks.getChildren(targetState.backupFolderId);
+    // Find the backup folder using hybrid approach (ID first, then name)
+    let backupFolder = await findStateFolder(targetState);
+    if (!backupFolder) {
+      throw new Error(`Backup folder for state "${stateName}" could not be found. The state may have been corrupted.`);
+    }
+    
+    console.log('Backup folder found:', backupFolder.title, 'with ID:', backupFolder.id);
+    
+    // Update the stored ID if it changed
+    if (backupFolder.id !== targetState.backupFolderId) {
+      console.log(`Backup folder ID changed from ${targetState.backupFolderId} to ${backupFolder.id}, updating...`);
+      await updateStateBackupFolderId(targetState.name, backupFolder.id);
+      // Update the local reference for the rest of the function
+      targetState.backupFolderId = backupFolder.id;
+    }
+    
+    // Validate that we have a valid folder ID before proceeding
+    if (!backupFolder.id) {
+      throw new Error(`Backup folder for state "${stateName}" has no valid ID`);
+    }
+    
+    // Get the children of the backup folder using the validated folder
+    const backupChildren = await chrome.bookmarks.getChildren(backupFolder.id);
     console.log('Backup children:', backupChildren);
     
     if (backupChildren && backupChildren.length > 0) {
@@ -343,7 +682,7 @@ async function switchToState(stateName) {
     }
 
     // Update current state name
-    await chrome.storage.local.set({ currentStateName: stateName });
+    await chrome.storage.sync.set({ currentStateName: stateName });
     currentStateName = stateName;
     console.log(`Updated current state name to: ${stateName}`);
 
@@ -378,7 +717,7 @@ async function deleteState(stateName) {
 
     // Remove from states list
     states.splice(stateIndex, 1);
-    await chrome.storage.local.set({ bookmarkStates: states });
+    await chrome.storage.sync.set({ bookmarkStates: states });
 
     return { success: true, message: `State "${stateName}" deleted successfully` };
   } catch (error) {
@@ -442,12 +781,421 @@ async function copyBookmarkTree(sourceBookmark, targetParentId) {
 
 // Helper function to get stored states
 async function getStoredStates() {
-  const result = await chrome.storage.local.get(['bookmarkStates']);
+  const result = await chrome.storage.sync.get(['bookmarkStates']);
   return result.bookmarkStates || [];
 }
 
 // Helper function to get current state name
 async function getCurrentStateName() {
-  const result = await chrome.storage.local.get(['currentStateName']);
+  const result = await chrome.storage.sync.get(['currentStateName']);
   return result.currentStateName || null;
+}
+
+// Ensure state name is unique
+async function ensureUniqueStateName(proposedName) {
+  const states = await getStoredStates();
+  let counter = 1;
+  let uniqueName = proposedName;
+  
+  while (states.find(s => s.name === uniqueName)) {
+    uniqueName = `${proposedName} (${counter})`;
+    counter++;
+  }
+  
+  if (uniqueName !== proposedName) {
+    console.log(`State name "${proposedName}" already exists, using "${uniqueName}" instead`);
+  }
+  
+  return uniqueName;
+}
+
+// Restore states from storage backup
+async function restoreStatesFromStorage() {
+  try {
+    console.log('Attempting to restore states from storage...');
+    
+    // Check what's actually in storage
+    const allStorage = await chrome.storage.sync.get(null);
+    console.log('All storage contents:', JSON.stringify(allStorage, null, 2));
+    
+    // Check if we have any states in storage
+    const result = await chrome.storage.sync.get(['bookmarkStates']);
+    console.log('Bookmark states from storage:', JSON.stringify(result, null, 2));
+    
+    if (!result.bookmarkStates || result.bookmarkStates.length === 0) {
+      console.log('No states found in sync storage to restore');
+      
+      // Check if there are any states in local storage that we can recover
+      console.log('Checking local storage for backup...');
+      const localResult = await chrome.storage.local.get(['bookmarkStates']);
+      if (localResult.bookmarkStates && localResult.bookmarkStates.length > 0) {
+        console.log(`Found ${localResult.bookmarkStates.length} states in local storage, attempting to restore...`);
+        
+        // Try to restore from local storage
+        let restoredCount = 0;
+        let failedCount = 0;
+        
+        for (const state of localResult.bookmarkStates) {
+          try {
+            if (state.backupFolderName || state.name) {
+              // Try to create the backup folder
+              const folderName = state.backupFolderName || state.name;
+              const newFolder = await chrome.bookmarks.create({
+                parentId: '2', // Other Bookmarks
+                title: folderName
+              });
+              
+              console.log(`Recreated backup folder for state "${state.name}": ${newFolder.title} (ID: ${newFolder.id})`);
+              
+              // Update the state with the new folder ID and name
+              state.backupFolderId = newFolder.id;
+              state.backupFolderName = folderName;
+              state.lastUpdated = new Date().toISOString();
+              restoredCount++;
+            } else {
+              console.warn(`State "${state.name}" has no backup folder name, cannot restore`);
+              failedCount++;
+            }
+          } catch (error) {
+            console.error(`Failed to restore state "${state.name}":`, error);
+            failedCount++;
+          }
+        }
+        
+        // Save the restored states to sync storage
+        if (restoredCount > 0) {
+          await chrome.storage.sync.set({ bookmarkStates: localResult.bookmarkStates });
+          console.log(`Successfully restored ${restoredCount} states from local storage`);
+          return `Restored ${restoredCount} states from local storage backup${failedCount > 0 ? `, ${failedCount} failed` : ''}`;
+        }
+      }
+      
+      return 'No states found in storage to restore';
+    }
+    
+    console.log(`Found ${result.bookmarkStates.length} states in storage`);
+    
+    // Try to restore each state by recreating its backup folder
+    let restoredCount = 0;
+    let failedCount = 0;
+    
+    for (const state of result.bookmarkStates) {
+      try {
+        if (state.backupFolderName) {
+          // Try to create the backup folder
+          const newFolder = await chrome.bookmarks.create({
+            parentId: '2', // Other Bookmarks
+            title: state.backupFolderName
+          });
+          
+          console.log(`Recreated backup folder for state "${state.name}": ${newFolder.title} (ID: ${newFolder.id})`);
+          
+          // Update the state with the new folder ID
+          state.backupFolderId = newFolder.id;
+          state.lastUpdated = new Date().toISOString();
+          restoredCount++;
+        } else {
+          console.warn(`State "${state.name}" has no backup folder name, cannot restore`);
+          failedCount++;
+        }
+      } catch (error) {
+        console.error(`Failed to restore state "${state.name}":`, error);
+        failedCount++;
+      }
+    }
+    
+    // Update storage with the restored states
+    if (restoredCount > 0) {
+      await chrome.storage.sync.set({ bookmarkStates: result.bookmarkStates });
+      console.log(`Successfully restored ${restoredCount} states`);
+    }
+    
+    const message = `Restored ${restoredCount} states${failedCount > 0 ? `, ${failedCount} failed` : ''}`;
+    console.log(message);
+    return message;
+    
+  } catch (error) {
+    console.error('Failed to restore states from storage:', error);
+    throw new Error('Failed to restore states from storage');
+  }
+}
+
+// Debug states and their folder mappings
+async function debugStates() {
+  try {
+    console.log('Debugging states...');
+    
+    const states = await getStoredStates();
+    if (!states || states.length === 0) {
+      return { message: 'No states found', data: null };
+    }
+    
+    console.log(`Debugging ${states.length} states...`);
+    
+    const debugResults = [];
+    
+    for (const state of states) {
+      console.log(`\n--- Debugging state: ${state.name} ---`);
+      const stateDebug = {
+        name: state.name,
+        backupFolderId: state.backupFolderId,
+        backupFolderName: state.backupFolderName,
+        created: state.created,
+        lastUpdated: state.lastUpdated
+      };
+      
+      // Check if backupFolderId exists
+      if (state.backupFolderId) {
+        try {
+          const folders = await chrome.bookmarks.get(state.backupFolderId);
+          if (folders && folders.length > 0) {
+            const folder = folders[0];
+            stateDebug.folderFound = true;
+            stateDebug.folderTitle = folder.title;
+            stateDebug.folderId = folder.id;
+            stateDebug.folderUrl = folder.url;
+            console.log(`✓ Folder found by ID: ${folder.title} (ID: ${folder.id})`);
+          } else {
+            stateDebug.folderFound = false;
+            stateDebug.folderError = 'No folder returned by ID';
+            console.log(`✗ No folder found by ID: ${state.backupFolderId}`);
+          }
+        } catch (error) {
+          stateDebug.folderFound = false;
+          stateDebug.folderError = error.message;
+          console.log(`✗ Error finding folder by ID: ${error.message}`);
+        }
+      } else {
+        stateDebug.folderFound = false;
+        stateDebug.folderError = 'No backupFolderId';
+        console.log(`✗ No backupFolderId for state`);
+      }
+      
+      // Check if folder exists by name
+      if (state.backupFolderName) {
+        try {
+          const otherBookmarks = await chrome.bookmarks.getChildren('2');
+          const matchingFolder = otherBookmarks.find(f => f.title === state.backupFolderName);
+          if (matchingFolder) {
+            stateDebug.nameMatchFound = true;
+            stateDebug.nameMatchTitle = matchingFolder.title;
+            stateDebug.nameMatchId = matchingFolder.id;
+            console.log(`✓ Folder found by name: ${matchingFolder.title} (ID: ${matchingFolder.id})`);
+          } else {
+            stateDebug.nameMatchFound = false;
+            console.log(`✗ No folder found by name: "${state.backupFolderName}"`);
+          }
+        } catch (error) {
+          stateDebug.nameMatchFound = false;
+          stateDebug.nameMatchError = error.message;
+          console.log(`✗ Error finding folder by name: ${error.message}`);
+        }
+      } else {
+        stateDebug.nameMatchFound = false;
+        stateDebug.nameMatchError = 'No backupFolderName';
+        console.log(`✗ No backupFolderName for state`);
+      }
+      
+      debugResults.push(stateDebug);
+    }
+    
+    const message = `Debugged ${states.length} states`;
+    console.log(`\n=== Debug Summary ===`);
+    console.log(JSON.stringify(debugResults, null, 2));
+    
+    return { message, data: debugResults };
+    
+  } catch (error) {
+    console.error('Failed to debug states:', error);
+    throw new Error('Failed to debug states');
+  }
+}
+
+// Check storage contents for debugging
+async function checkStorageContents() {
+  try {
+    console.log('Checking storage contents...');
+    
+    // Check sync storage
+    const syncStorage = await chrome.storage.sync.get(null);
+    console.log('Sync storage contents:', syncStorage);
+    
+    // Check local storage
+    const localStorage = await chrome.storage.local.get(null);
+    console.log('Local storage contents:', localStorage);
+    
+    // Check Other Bookmarks folder contents
+    console.log('Checking Other Bookmarks folder...');
+    const otherBookmarks = await chrome.bookmarks.getChildren('2');
+    console.log('Other Bookmarks contents:', otherBookmarks.map(f => ({ id: f.id, title: f.title, url: f.url })));
+    
+    // Check if there are any bookmark states anywhere
+    const hasSyncStates = syncStorage.bookmarkStates && syncStorage.bookmarkStates.length > 0;
+    const hasLocalStates = localStorage.bookmarkStates && localStorage.bookmarkStates.length > 0;
+    
+    let message = '';
+    let data = { 
+      sync: syncStorage, 
+      local: localStorage,
+      otherBookmarks: otherBookmarks.map(f => ({ id: f.id, title: f.title, url: f.url }))
+    };
+    
+    if (hasSyncStates) {
+      message = `Found ${syncStorage.bookmarkStates.length} states in sync storage`;
+    } else if (hasLocalStates) {
+      message = `Found ${localStorage.bookmarkStates.length} states in local storage (sync empty)`;
+    } else {
+      message = 'No states found in any storage';
+    }
+    
+    return { message, data };
+    
+  } catch (error) {
+    console.error('Failed to check storage contents:', error);
+    throw new Error('Failed to check storage contents');
+  }
+}
+
+// Fix imported states by adding missing backupFolderName
+async function fixImportedStates() {
+  try {
+    console.log('Fixing imported states...');
+    
+    const states = await getStoredStates();
+    if (!states || states.length === 0) {
+      console.log('No states to fix');
+      return 'No states to fix';
+    }
+    
+    let fixedCount = 0;
+    let failedCount = 0;
+    
+    for (const state of states) {
+      try {
+        if (!state.backupFolderName) {
+          console.log(`State "${state.name}" is missing backupFolderName, attempting to fix...`);
+          
+          // Try to find the folder by ID first
+          if (state.backupFolderId) {
+            try {
+              const folder = await chrome.bookmarks.get(state.backupFolderId);
+              if (folder) {
+                state.backupFolderName = folder.title;
+                state.lastUpdated = new Date().toISOString();
+                fixedCount++;
+                console.log(`Fixed state "${state.name}" with folder: ${folder.title}`);
+                continue;
+              }
+            } catch (error) {
+              console.warn(`Could not find folder with ID ${state.backupFolderId} for state "${state.name}"`);
+            }
+          }
+          
+          // If ID didn't work, try to find by name in Other Bookmarks
+          const otherBookmarks = await chrome.bookmarks.getChildren('2');
+          const matchingFolder = otherBookmarks.find(f => f.title === state.name);
+          
+          if (matchingFolder) {
+            state.backupFolderId = matchingFolder.id;
+            state.backupFolderName = matchingFolder.title;
+            state.lastUpdated = new Date().toISOString();
+            fixedCount++;
+            console.log(`Fixed state "${state.name}" by matching folder name: ${matchingFolder.title}`);
+          } else {
+            console.warn(`Could not find folder for state "${state.name}"`);
+            failedCount++;
+          }
+        }
+      } catch (error) {
+        console.error(`Error fixing state "${state.name}":`, error);
+        failedCount++;
+      }
+    }
+    
+    // Update storage with fixed states
+    if (fixedCount > 0) {
+      await chrome.storage.sync.set({ bookmarkStates: states });
+      console.log(`Successfully fixed ${fixedCount} states`);
+    }
+    
+    const message = `Fixed ${fixedCount} states${failedCount > 0 ? `, ${failedCount} failed` : ''}`;
+    console.log(message);
+    return message;
+    
+  } catch (error) {
+    console.error('Failed to fix imported states:', error);
+    throw new Error('Failed to fix imported states');
+  }
+}
+
+// Scan Other Bookmarks folder and recover orphaned states
+async function scanAndRecoverOrphanedStates() {
+  try {
+    console.log('Scanning Other Bookmarks folder for orphaned states...');
+    
+    // Get all items in Other Bookmarks
+    const otherBookmarks = await chrome.bookmarks.getChildren('2');
+    console.log(`Found ${otherBookmarks.length} items in Other Bookmarks:`, otherBookmarks.map(f => f.title));
+    
+    // Get current states from storage
+    const currentStates = await getStoredStates();
+    const currentStateNames = currentStates.map(s => s.name);
+    const currentFolderNames = currentStates.map(s => s.backupFolderName).filter(Boolean);
+    
+    console.log('Current state names:', currentStateNames);
+    console.log('Current folder names:', currentFolderNames);
+    
+    // Find orphaned folders (folders that exist but aren't in storage)
+    const orphanedFolders = otherBookmarks.filter(folder => 
+      folder.url === undefined && // It's a folder, not a bookmark
+      !currentFolderNames.includes(folder.title) && // Not in current states
+      !currentStateNames.includes(folder.title) // Not a state name either
+    );
+    
+    console.log('Orphaned folders found:', orphanedFolders.map(f => f.title));
+    
+    if (orphanedFolders.length === 0) {
+      return 'No orphaned states found to recover';
+    }
+    
+    // Recover each orphaned folder as a new state
+    let recoveredCount = 0;
+    let failedCount = 0;
+    
+    for (const folder of orphanedFolders) {
+      try {
+        // Create a new state entry
+        const newState = {
+          name: folder.title,
+          backupFolderId: folder.id,
+          backupFolderName: folder.title,
+          created: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        };
+        
+        // Add to current states
+        currentStates.push(newState);
+        recoveredCount++;
+        
+        console.log(`Recovered orphaned state: ${folder.title} (ID: ${folder.id})`);
+      } catch (error) {
+        console.error(`Failed to recover orphaned state ${folder.title}:`, error);
+        failedCount++;
+      }
+    }
+    
+    // Update storage with recovered states
+    if (recoveredCount > 0) {
+      await chrome.storage.sync.set({ bookmarkStates: currentStates });
+      console.log(`Successfully recovered ${recoveredCount} orphaned states`);
+    }
+    
+    const message = `Recovered ${recoveredCount} orphaned states${failedCount > 0 ? `, ${failedCount} failed` : ''}`;
+    console.log(message);
+    return message;
+    
+  } catch (error) {
+    console.error('Failed to scan and recover orphaned states:', error);
+    throw new Error('Failed to scan and recover orphaned states');
+  }
 }

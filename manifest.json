@@ -8,6 +8,7 @@
     "storage",
     "alarms"
   ],
+  "host_permissions": [],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Bookmarks Bar Switcher"

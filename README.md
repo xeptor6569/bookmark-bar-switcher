@@ -11,7 +11,18 @@ A Chrome extension that allows you to create and switch between different bookma
 - **State Management**: View, rename, and delete saved states
 - **Clean Organization**: State folders are visible in "Other Bookmarks" for easy navigation
 
-## 🚀 New Auto-Save Features
+## 🚀 New Features
+
+### **Cross-Device Sync**
+- **Automatic Sync**: States sync automatically across all your Chrome devices
+- **Single Source of Truth**: Your bookmark states are always up-to-date everywhere
+- **No Manual Transfer**: Switch devices and your states are already there
+
+### **Export/Import Functionality**
+- **Export States**: Download all your states as a JSON file for backup
+- **Import States**: Restore states from a previously exported file
+- **Version Control**: Export files include version and date information
+- **Easy Sharing**: Share state configurations with others
 
 ### **Smart Auto-Saving**
 - **Interval-based**: Automatically save every 1, 5, 10, 15, or 30 minutes
@@ -114,7 +125,7 @@ tabs-manager/
 This extension requires the following permissions:
 
 - **`bookmarks`**: To read, create, and modify bookmarks
-- **`storage`**: To save extension data and settings locally
+- **`storage`**: To save extension data and settings with cross-device sync
 - **`alarms`**: To schedule automatic saving at intervals
 
 ## 🌐 Browser Compatibility
@@ -135,8 +146,9 @@ This extension requires the following permissions:
 ### Data Location
 
 - **State Folders**: Located in "Other Bookmarks" with clean names
-- **Extension Data**: Stored in Chrome's local storage (not synced across devices)
-- **Auto-save Settings**: Stored locally and persist between sessions
+- **Extension Data**: Stored in Chrome's sync storage (automatically synced across devices)
+- **Auto-save Settings**: Stored in sync storage and persist across all devices
+- **Storage Limit**: 100KB total for all synced data (sufficient for most users)
 
 ### Console Logging
 
