@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bookmarks Bar Switcher</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Bookmarks Bar Switcher</h1>
+    
+    <div class="current-state">
+      <label for="currentStateName">Current State Name:</label>
+      <input type="text" id="currentStateName" placeholder="e.g., Personal, Work, Development">
+      <button id="saveCurrentState">Save Current State</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="saved-states">
+      <h3>Saved States</h3>
+      <div id="statesList"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="actions">
+      <button id="createNewState" class="primary">Create New State</button>
+      <button id="refreshStates">Refresh</button>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

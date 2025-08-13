@@ -1,0 +1,184 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 350px;
+  min-height: 400px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #f8f9fa;
+}
+
+.container {
+  padding: 20px;
+}
+
+h1 {
+  font-size: 18px;
+  color: #1a73e8;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+h3 {
+  font-size: 14px;
+  color: #5f6368;
+  margin-bottom: 15px;
+}
+
+.current-state {
+  margin-bottom: 20px;
+}
+
+.current-state label {
+  display: block;
+  font-size: 12px;
+  color: #5f6368;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.current-state input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.current-state input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+button {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background: #1557b0;
+}
+
+button:active {
+  background: #174ea6;
+}
+
+button.primary {
+  background: #34a853;
+}
+
+button.primary:hover {
+  background: #2d8745;
+}
+
+button.secondary {
+  background: #5f6368;
+}
+
+button.secondary:hover {
+  background: #494c50;
+}
+
+button.danger {
+  background: #ea4335;
+}
+
+button.danger:hover {
+  background: #d93025;
+}
+
+.divider {
+  height: 1px;
+  background: #dadce0;
+  margin: 20px 0;
+}
+
+.saved-states {
+  margin-bottom: 20px;
+}
+
+.state-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.state-item:hover {
+  border-color: #1a73e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.state-name {
+  font-size: 14px;
+  color: #202124;
+  font-weight: 500;
+}
+
+.state-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.state-actions button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.actions button {
+  flex: 1;
+}
+
+.status {
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+  min-height: 20px;
+}
+
+.status.success {
+  background: #e6f4ea;
+  color: #137333;
+  border: 1px solid #34a853;
+}
+
+.status.error {
+  background: #fce8e6;
+  color: #c5221f;
+  border: 1px solid #ea4335;
+}
+
+.status.info {
+  background: #e8f0fe;
+  color: #1967d2;
+  border: 1px solid #1a73e8;
+}
+
+.empty-state {
+  text-align: center;
+  color: #5f6368;
+  font-style: italic;
+  padding: 20px;
+}
