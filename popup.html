@@ -9,11 +9,31 @@
   <div class="container">
     <h1>Bookmarks Bar Switcher</h1>
     
-    <div class="current-state">
-      <label for="currentStateName">Current State Name:</label>
-      <input type="text" id="currentStateName" placeholder="e.g., Personal, Work, Development">
-      <button id="saveCurrentState">Save Current State</button>
+    <!-- First-time setup screen -->
+    <div id="firstTimeSetup" class="setup-screen" style="display: none;">
+      <div class="welcome-message">
+        <h2>🎉 Welcome to Bookmarks Bar Switcher!</h2>
+        <p>This extension helps you organize your bookmarks into different "states" that you can switch between.</p>
+        <p>Let's start by saving your current bookmarks bar as your first state:</p>
+      </div>
+      
+      <div class="setup-form">
+        <label for="firstStateName">Name your current bookmarks bar:</label>
+        <input type="text" id="firstStateName" placeholder="e.g., Personal, Work, Development" maxlength="50">
+        <div class="setup-actions">
+          <button id="createFirstState" class="primary">Create First State</button>
+          <button id="skipSetup" class="secondary">Skip for Now</button>
+        </div>
+      </div>
     </div>
+    
+    <!-- Main interface (hidden until setup is complete) -->
+    <div id="mainInterface" style="display: none;">
+      <div class="current-state">
+        <label for="currentStateName">Current State Name:</label>
+        <input type="text" id="currentStateName" placeholder="e.g., Personal, Work, Development">
+        <button id="saveCurrentState">Save Current State</button>
+      </div>
 
     <div class="divider"></div>
 
@@ -83,6 +103,7 @@
         <button id="validateStates" class="secondary">Validate States</button>
         <button id="debugStates" class="secondary">Debug States</button>
         <button id="checkStorage" class="secondary">Check Storage</button>
+        <button id="resetToSetup" class="secondary">Reset to Setup</button>
         <input type="file" id="importFileInput" accept=".json" style="display: none;">
       </div>
       <div class="sync-status" id="syncStatus">
@@ -91,7 +112,8 @@
       </div>
     </div>
 
-    <div class="status" id="status"></div>
+      <div class="status" id="status"></div>
+    </div>
   </div>
 
   <script src="popup.js"></script>

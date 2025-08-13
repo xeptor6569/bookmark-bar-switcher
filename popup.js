@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', function() {
   const includeBookmarksCheckbox = document.getElementById('includeBookmarks');
   const privacyOptions = document.getElementById('privacyOptions');
   const privacyLevelSelect = document.getElementById('privacyLevel');
+  
+  // First-time setup elements
+  const firstTimeSetup = document.getElementById('firstTimeSetup');
+  const mainInterface = document.getElementById('mainInterface');
+  const firstStateNameInput = document.getElementById('firstStateName');
+  const createFirstStateBtn = document.getElementById('createFirstState');
+  const skipSetupBtn = document.getElementById('skipSetup');
 
   // Load current state name and settings from storage
   chrome.storage.sync.get(['currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes'], function(result) {
@@ -33,9 +40,64 @@ document.addEventListener('DOMContentLoaded', function() {
       autoSaveInterval.value = result.autoSaveIntervalMinutes;
     }
   });
+  
+  // Check if this is first-time setup
+  chrome.storage.sync.get(['bookmarkStates'], function(result) {
+    if (!result.bookmarkStates || result.bookmarkStates.length === 0) {
+      // First time - show setup screen
+      firstTimeSetup.style.display = 'block';
+      mainInterface.style.display = 'none';
+    } else {
+      // Has existing states - show main interface
+      firstTimeSetup.style.display = 'none';
+      mainInterface.style.display = 'block';
+      loadSavedStates();
+    }
+  });
 
   // Check sync storage status
   checkSyncStatus();
+  
+  // First-time setup event listeners
+  createFirstStateBtn.addEventListener('click', function() {
+    const stateName = firstStateNameInput.value.trim();
+    if (!stateName) {
+      showStatus('Please enter a state name', 'error');
+      return;
+    }
+    
+    showStatus('Creating your first state...', 'info');
+    
+    chrome.runtime.sendMessage({
+      action: 'saveCurrentState',
+      stateName: stateName
+    }, function(response) {
+      if (response && response.success) {
+        showStatus('First state created successfully!', 'success');
+        
+        // Hide setup, show main interface
+        firstTimeSetup.style.display = 'none';
+        mainInterface.style.display = 'block';
+        
+        // Set the current state name
+        currentStateNameInput.value = stateName;
+        
+        // Load the states list
+        loadSavedStates();
+      } else {
+        showStatus('Failed to create first state', 'error');
+      }
+    });
+  });
+  
+  skipSetupBtn.addEventListener('click', function() {
+    // Hide setup, show main interface
+    firstTimeSetup.style.display = 'none';
+    mainInterface.style.display = 'block';
+    
+    // Load empty states list
+    loadSavedStates();
+  });
 
   // Auto-save toggle handler
   autoSaveToggle.addEventListener('change', function() {
@@ -352,6 +414,30 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
       console.error('Error handling response:', error);
       showStatus('Error during state debugging', 'error');
+    }
+  });
+
+  // Reset to setup
+  document.getElementById('resetToSetup').addEventListener('click', async () => {
+    if (confirm('This will clear all states and reset to first-time setup. Are you sure?')) {
+      try {
+        showStatus('Resetting to setup...', 'info');
+        
+        // Clear all states from storage
+        await chrome.storage.sync.remove(['bookmarkStates', 'currentStateName']);
+        
+        // Show setup screen
+        firstTimeSetup.style.display = 'block';
+        mainInterface.style.display = 'none';
+        
+        // Clear the first state name input
+        firstStateNameInput.value = '';
+        
+        showStatus('Reset to setup complete', 'success');
+      } catch (error) {
+        console.error('Error during reset:', error);
+        showStatus('Error during reset', 'error');
+      }
     }
   });
 

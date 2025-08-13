@@ -15,6 +15,65 @@ body {
   padding: 20px;
 }
 
+/* First-time setup styles */
+.setup-screen {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.welcome-message h2 {
+  color: #1a73e8;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.welcome-message p {
+  color: #5f6368;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
+.setup-form {
+  margin-top: 25px;
+  text-align: left;
+}
+
+.setup-form label {
+  display: block;
+  font-size: 12px;
+  color: #5f6368;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.setup-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #dadce0;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+
+.setup-form input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+.setup-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.setup-actions button {
+  flex: 1;
+  max-width: 150px;
+}
+
 h1 {
   font-size: 18px;
   color: #1a73e8;
