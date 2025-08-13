@@ -56,9 +56,27 @@
 
     <div class="data-management">
       <h3>Data Management</h3>
+      <div class="export-options" id="exportOptions" style="display: none;">
+        <div class="export-option">
+          <label>
+            <input type="checkbox" id="includeBookmarks">
+            Include bookmark content
+          </label>
+        </div>
+        <div class="privacy-options" id="privacyOptions" style="display: none;">
+          <label for="privacyLevel">Privacy Level:</label>
+          <select id="privacyLevel">
+            <option value="hidden">🔒 Hide URLs (Recommended)</option>
+            <option value="domain">🌐 Show Domains Only</option>
+            <option value="full">📖 Show Full URLs</option>
+          </select>
+        </div>
+      </div>
       <div class="data-actions">
         <button id="exportStates" class="secondary">Export States</button>
+        <button id="performExport" class="primary" style="display: none;">Export</button>
         <button id="importStates" class="secondary">Import States</button>
+        <button id="cleanupStates" class="secondary">Cleanup States</button>
         <input type="file" id="importFileInput" accept=".json" style="display: none;">
       </div>
       <div class="sync-status" id="syncStatus">

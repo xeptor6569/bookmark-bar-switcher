@@ -8,11 +8,13 @@ let autoSaveAlarmName = 'bookmarksAutoSave';
 // Initialize auto-save settings on startup
 chrome.runtime.onStartup.addListener(async () => {
   await loadAutoSaveSettings();
+  await validateAndCleanupStates();
   setupAutoSave();
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
   await loadAutoSaveSettings();
+  await validateAndCleanupStates();
   setupAutoSave();
 });
 
@@ -66,6 +68,65 @@ async function migrateToSyncStorage(localData) {
     console.log('Successfully migrated from local to sync storage');
   } catch (error) {
     console.error('Migration failed:', error);
+  }
+}
+
+// Validate and cleanup corrupted states
+async function validateAndCleanupStates() {
+  try {
+    const states = await getStoredStates();
+    if (!states || states.length === 0) {
+      console.log('No states to validate');
+      return;
+    }
+
+    console.log(`Validating ${states.length} states...`);
+    const validStates = [];
+    let corruptedCount = 0;
+
+    for (const state of states) {
+      try {
+        // Check if backup folder exists
+        if (state.backupFolderId) {
+          const backupFolder = await chrome.bookmarks.get(state.backupFolderId);
+          if (backupFolder) {
+            validStates.push(state);
+            console.log(`State "${state.name}" is valid`);
+          } else {
+            console.warn(`State "${state.name}" has invalid backup folder ID: ${state.backupFolderId}`);
+            corruptedCount++;
+          }
+        } else {
+          console.warn(`State "${state.name}" has no backup folder ID`);
+          corruptedCount++;
+        }
+      } catch (error) {
+        console.warn(`Error validating state "${state.name}":`, error);
+        corruptedCount++;
+      }
+    }
+
+    // Update storage with only valid states
+    if (corruptedCount > 0) {
+      console.log(`Found ${corruptedCount} corrupted states, cleaning up...`);
+      await chrome.storage.sync.set({ bookmarkStates: validStates });
+      
+      // If current state is corrupted, clear it
+      const currentStateName = await getCurrentStateName();
+      if (currentStateName && !validStates.find(s => s.name === currentStateName)) {
+        console.log(`Current state "${currentStateName}" is corrupted, clearing...`);
+        await chrome.storage.sync.set({ currentStateName: null });
+      }
+      
+      const message = `Removed ${corruptedCount} corrupted states. ${validStates.length} valid states remaining.`;
+      console.log(`Cleanup complete. ${validStates.length} valid states remaining.`);
+      return message;
+    } else {
+      console.log('All states are valid');
+      return 'All states are valid. No cleanup needed.';
+    }
+  } catch (error) {
+    console.error('State validation failed:', error);
   }
 }
 
@@ -162,6 +223,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'updateAutoSave':
       updateAutoSave(request.enabled, request.interval)
         .then(result => sendResponse(result))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+
+    case 'cleanupStates':
+      validateAndCleanupStates()
+        .then(result => sendResponse({ success: true, message: result }))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
   }
@@ -347,6 +414,18 @@ async function switchToState(stateName) {
 
     // Restore the target state
     console.log(`Restoring from backup folder: ${targetState.backupFolderId}`);
+    
+    // Validate that the backup folder still exists
+    try {
+      const backupFolder = await chrome.bookmarks.get(targetState.backupFolderId);
+      if (!backupFolder) {
+        throw new Error(`Backup folder ${targetState.backupFolderId} not found`);
+      }
+      console.log('Backup folder validated:', backupFolder.title);
+    } catch (error) {
+      console.error('Backup folder validation failed:', error);
+      throw new Error(`Backup folder for state "${stateName}" is missing. The state may have been corrupted.`);
+    }
     
     // Get the children of the backup folder directly
     const backupChildren = await chrome.bookmarks.getChildren(targetState.backupFolderId);

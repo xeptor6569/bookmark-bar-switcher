@@ -8,10 +8,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const autoSaveToggle = document.getElementById('autoSaveToggle');
   const autoSaveInterval = document.getElementById('autoSaveInterval');
   const exportStatesBtn = document.getElementById('exportStates');
+  const performExportBtn = document.getElementById('performExport');
   const importStatesBtn = document.getElementById('importStates');
+  const cleanupStatesBtn = document.getElementById('cleanupStates');
   const importFileInput = document.getElementById('importFileInput');
   const syncIndicator = document.getElementById('syncIndicator');
   const syncText = document.getElementById('syncText');
+  const exportOptions = document.getElementById('exportOptions');
+  const includeBookmarksCheckbox = document.getElementById('includeBookmarks');
+  const privacyOptions = document.getElementById('privacyOptions');
+  const privacyLevelSelect = document.getElementById('privacyLevel');
 
   // Load current state name and settings from storage
   chrome.storage.sync.get(['currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes'], function(result) {
@@ -236,7 +242,39 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Export states
-  exportStatesBtn.addEventListener('click', exportStates);
+  exportStatesBtn.addEventListener('click', () => {
+    exportOptions.style.display = 'block';
+    performExportBtn.style.display = 'block';
+  });
+
+  // Perform export
+  performExportBtn.addEventListener('click', performExport);
+
+  // Cleanup states
+  cleanupStatesBtn.addEventListener('click', cleanupStates);
+
+  // Handle export options
+  includeBookmarksCheckbox.addEventListener('change', function() {
+    privacyOptions.style.display = this.checked ? 'block' : 'none';
+    
+    // Update export button text
+    if (this.checked) {
+      const privacyLevel = privacyLevelSelect.value;
+      const privacyText = privacyLevel === 'hidden' ? '🔒' : 
+                         privacyLevel === 'domain' ? '🌐' : '📖';
+      performExportBtn.textContent = `Export with Bookmarks ${privacyText}`;
+    } else {
+      performExportBtn.textContent = 'Export States Only';
+    }
+  });
+
+  // Handle privacy level change
+  privacyLevelSelect.addEventListener('change', function() {
+    // Update the export button text based on privacy level
+    const privacyText = this.value === 'hidden' ? '🔒' : 
+                       this.value === 'domain' ? '🌐' : '📖';
+    exportStatesBtn.textContent = `Export States ${privacyText}`;
+  });
 
   // Import states
   importStatesBtn.addEventListener('click', () => {
@@ -283,13 +321,49 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Export states to JSON file
-  function exportStates() {
-    chrome.storage.sync.get(['bookmarkStates', 'currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes'], (data) => {
-      const exportData = {
+  async function performExport() {
+    try {
+      showStatus('Preparing export...', 'info');
+      
+      const includeBookmarks = includeBookmarksCheckbox.checked;
+      const privacyLevel = privacyLevelSelect.value;
+      
+      // Get basic state data
+      const data = await chrome.storage.sync.get(['bookmarkStates', 'currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes']);
+      
+      let exportData = {
         version: '1.0.0',
         exportDate: new Date().toISOString(),
+        exportOptions: {
+          includeBookmarks: includeBookmarks,
+          privacyLevel: privacyLevel
+        },
         data: data
       };
+      
+      // If including bookmarks, fetch the actual bookmark content
+      if (includeBookmarks && data.bookmarkStates) {
+        exportData.data.bookmarkStates = await Promise.all(
+          data.bookmarkStates.map(async (state) => {
+            const enhancedState = { ...state };
+            
+            try {
+              // Get the backup folder for this state
+              const backupFolder = await chrome.bookmarks.get(state.backupFolderId);
+              if (backupFolder) {
+                // Get all bookmarks in the backup folder
+                const bookmarks = await chrome.bookmarks.getChildren(state.backupFolderId);
+                enhancedState.bookmarks = await processBookmarksForExport(bookmarks, privacyLevel);
+              }
+            } catch (error) {
+              console.warn(`Could not fetch bookmarks for state ${state.name}:`, error);
+              enhancedState.bookmarks = [];
+            }
+            
+            return enhancedState;
+          })
+        );
+      }
       
       const dataStr = JSON.stringify(exportData, null, 2);
       const dataBlob = new Blob([dataStr], {type: 'application/json'});
@@ -304,8 +378,62 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      showStatus('States exported successfully', 'success');
-    });
+      // Hide export options after successful export
+      exportOptions.style.display = 'none';
+      performExportBtn.style.display = 'none';
+      
+      showStatus('Export completed successfully', 'success');
+    } catch (error) {
+      console.error('Export failed:', error);
+      showStatus(`Export failed: ${error.message}`, 'error');
+    }
+  }
+
+  // Process bookmarks for export based on privacy level
+  async function processBookmarksForExport(bookmarks, privacyLevel) {
+    const processedBookmarks = [];
+    
+    for (const bookmark of bookmarks) {
+      const processedBookmark = {
+        title: bookmark.title,
+        type: bookmark.url ? 'bookmark' : 'folder'
+      };
+      
+      if (bookmark.url) {
+        // It's a bookmark - handle URL based on privacy level
+        switch (privacyLevel) {
+          case 'hidden':
+            processedBookmark.url = '[HIDDEN]';
+            break;
+          case 'domain':
+            try {
+              const url = new URL(bookmark.url);
+              processedBookmark.url = url.hostname;
+            } catch {
+              processedBookmark.url = '[INVALID_URL]';
+            }
+            break;
+          case 'full':
+            processedBookmark.url = bookmark.url;
+            break;
+        }
+      } else {
+        // It's a folder - recursively process children
+        try {
+          const children = await chrome.bookmarks.getChildren(bookmark.id);
+          if (children && children.length > 0) {
+            processedBookmark.children = await processBookmarksForExport(children, privacyLevel);
+          }
+        } catch (error) {
+          console.warn(`Could not fetch children for folder ${bookmark.title}:`, error);
+          processedBookmark.children = [];
+        }
+      }
+      
+      processedBookmarks.push(processedBookmark);
+    }
+    
+    return processedBookmarks;
   }
 
   // Handle import file selection
@@ -322,9 +450,19 @@ document.addEventListener('DOMContentLoaded', function() {
           throw new Error('Invalid export file format');
         }
         
+        // Check if this is an enhanced export with bookmarks
+        const hasBookmarks = importData.data.bookmarkStates && 
+                           importData.data.bookmarkStates.some(state => state.bookmarks);
+        
+        let confirmMessage = 'This will replace all existing states.';
+        if (hasBookmarks) {
+          confirmMessage += '\n\nThis export includes bookmark content and will restore the complete bookmark structure.';
+        }
+        confirmMessage += '\n\nAre you sure?';
+        
         // Confirm import
-        if (confirm('This will replace all existing states. Are you sure?')) {
-          importStates(importData.data);
+        if (confirm(confirmMessage)) {
+          importStates(importData.data, hasBookmarks);
         }
       } catch (error) {
         showStatus(`Import failed: ${error.message}`, 'error');
@@ -336,11 +474,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Import states from data
-  function importStates(data) {
-    chrome.storage.sync.set(data, () => {
-      if (chrome.runtime.lastError) {
-        showStatus(`Import failed: ${chrome.runtime.lastError.message}`, 'error');
-        return;
+  async function importStates(data, hasBookmarks = false) {
+    try {
+      if (hasBookmarks) {
+        // Enhanced import with bookmark content
+        await importStatesWithBookmarks(data);
+      } else {
+        // Basic import - just settings and state metadata
+        await chrome.storage.sync.set(data);
       }
       
       showStatus('States imported successfully', 'success');
@@ -359,7 +500,94 @@ document.addEventListener('DOMContentLoaded', function() {
       if (data.autoSaveIntervalMinutes) {
         autoSaveInterval.value = data.autoSaveIntervalMinutes;
       }
-    });
+    } catch (error) {
+      console.error('Import failed:', error);
+      showStatus(`Import failed: ${error.message}`, 'error');
+    }
+  }
+
+  // Import states with bookmark content
+  async function importStatesWithBookmarks(data) {
+    // First, import the basic data
+    await chrome.storage.sync.set(data);
+    
+    // Then restore bookmark content for each state
+    if (data.bookmarkStates) {
+      for (const state of data.bookmarkStates) {
+        if (state.bookmarks && state.backupFolderId) {
+          try {
+            // Clear existing content in the backup folder
+            const existingChildren = await chrome.bookmarks.getChildren(state.backupFolderId);
+            for (const child of existingChildren) {
+              await chrome.bookmarks.removeTree(child.id);
+            }
+            
+            // Restore bookmarks from the export
+            await restoreBookmarksFromExport(state.bookmarks, state.backupFolderId);
+            
+            console.log(`Restored bookmarks for state: ${state.name}`);
+          } catch (error) {
+            console.warn(`Failed to restore bookmarks for state ${state.name}:`, error);
+          }
+        }
+      }
+    }
+  }
+
+  // Restore bookmarks from export data
+  async function restoreBookmarksFromExport(bookmarks, parentId) {
+    for (const bookmark of bookmarks) {
+      if (bookmark.type === 'bookmark' && bookmark.url && bookmark.url !== '[HIDDEN]') {
+        // Create bookmark (only if URL is not hidden)
+        try {
+          await chrome.bookmarks.create({
+            parentId: parentId,
+            title: bookmark.title,
+            url: bookmark.url
+          });
+        } catch (error) {
+          console.warn(`Failed to create bookmark ${bookmark.title}:`, error);
+        }
+      } else if (bookmark.type === 'folder') {
+        // Create folder
+        try {
+          const newFolder = await chrome.bookmarks.create({
+            parentId: parentId,
+            title: bookmark.title
+          });
+          
+          // Recursively restore children
+          if (bookmark.children && bookmark.children.length > 0) {
+            await restoreBookmarksFromExport(bookmark.children, newFolder.id);
+          }
+        } catch (error) {
+          console.warn(`Failed to create folder ${bookmark.title}:`, error);
+        }
+      }
+    }
+  }
+
+  // Cleanup corrupted states
+  async function cleanupStates() {
+    try {
+      showStatus('Cleaning up states...', 'info');
+      
+      // Send message to background script to perform cleanup
+      chrome.runtime.sendMessage({
+        action: 'cleanupStates'
+      }, function(response) {
+        if (response.success) {
+          showStatus(`Cleanup complete: ${response.message}`, 'success');
+          loadSavedStates();
+          checkSyncStatus();
+        } else {
+          showStatus(`Cleanup failed: ${response.error}`, 'error');
+        }
+      });
+    } catch (error) {
+      console.error('Cleanup failed:', error);
+      showStatus(`Cleanup failed: ${error.message}`, 'error');
+    }
   }
 
   // Load saved states on popup open

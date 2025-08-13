@@ -278,6 +278,54 @@ button.danger:hover {
   flex: 1;
 }
 
+.export-options {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dadce0;
+}
+
+.export-option {
+  margin-bottom: 10px;
+}
+
+.export-option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #5f6368;
+  cursor: pointer;
+}
+
+.export-option input[type="checkbox"] {
+  margin: 0;
+}
+
+.privacy-options {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #dadce0;
+}
+
+.privacy-options label {
+  display: block;
+  font-size: 12px;
+  color: #5f6368;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.privacy-options select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 12px;
+  background: white;
+}
+
 .sync-status {
   display: flex;
   align-items: center;
