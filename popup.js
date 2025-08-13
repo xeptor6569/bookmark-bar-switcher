@@ -5,11 +5,59 @@ document.addEventListener('DOMContentLoaded', function() {
   const refreshStatesBtn = document.getElementById('refreshStates');
   const statesList = document.getElementById('statesList');
   const status = document.getElementById('status');
+  const autoSaveToggle = document.getElementById('autoSaveToggle');
+  const autoSaveInterval = document.getElementById('autoSaveInterval');
 
-  // Load current state name from storage
-  chrome.storage.local.get(['currentStateName'], function(result) {
+  // Load current state name and settings from storage
+  chrome.storage.local.get(['currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes'], function(result) {
     if (result.currentStateName) {
       currentStateNameInput.value = result.currentStateName;
+    }
+    
+    if (result.autoSaveEnabled !== undefined) {
+      autoSaveToggle.checked = result.autoSaveEnabled;
+    }
+    
+    if (result.autoSaveIntervalMinutes) {
+      autoSaveInterval.value = result.autoSaveIntervalMinutes;
+    }
+  });
+
+  // Auto-save toggle handler
+  autoSaveToggle.addEventListener('change', function() {
+    const enabled = this.checked;
+    const interval = parseInt(autoSaveInterval.value);
+    
+    chrome.storage.local.set({ 
+      autoSaveEnabled: enabled,
+      autoSaveIntervalMinutes: interval
+    });
+    
+    // Send message to background script to update auto-save
+    chrome.runtime.sendMessage({
+      action: 'updateAutoSave',
+      enabled: enabled,
+      interval: interval
+    });
+    
+    showStatus(`Auto-save ${enabled ? 'enabled' : 'disabled'}`, 'info');
+  });
+
+  // Auto-save interval handler
+  autoSaveInterval.addEventListener('change', function() {
+    const interval = parseInt(this.value);
+    const enabled = autoSaveToggle.checked;
+    
+    chrome.storage.local.set({ autoSaveIntervalMinutes: interval });
+    
+    if (enabled) {
+      chrome.runtime.sendMessage({
+        action: 'updateAutoSave',
+        enabled: true,
+        interval: interval
+      });
+      
+      showStatus(`Auto-save interval updated to ${interval} minute${interval > 1 ? 's' : ''}`, 'info');
     }
   });
 

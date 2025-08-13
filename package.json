@@ -1,7 +1,7 @@
 {
   "name": "bookmarks-bar-switcher",
   "version": "1.0.0",
-  "description": "A Chrome extension that allows you to create and switch between different bookmark bar states",
+  "description": "A Chrome extension that allows you to create and switch between different bookmark bar states with automatic saving capabilities",
   "main": "background.js",
   "scripts": {
     "build": "echo 'No build step required for this extension'",
@@ -12,7 +12,9 @@
     "chrome-extension",
     "bookmarks",
     "productivity",
-    "browser-extension"
+    "browser-extension",
+    "auto-save",
+    "bookmark-management"
   ],
   "author": "Your Name",
   "license": "MIT",

@@ -1,4 +1,89 @@
-// Background service worker for Bookmarks Bar Switcher
+// Background service worker for Bookmarks Bar Switcher with Auto-save
+
+let autoSaveEnabled = false;
+let autoSaveInterval = 5;
+let currentStateName = null;
+let autoSaveAlarmName = 'bookmarksAutoSave';
+
+// Initialize auto-save settings on startup
+chrome.runtime.onStartup.addListener(async () => {
+  await loadAutoSaveSettings();
+  setupAutoSave();
+});
+
+chrome.runtime.onInstalled.addListener(async () => {
+  await loadAutoSaveSettings();
+  setupAutoSave();
+});
+
+// Load auto-save settings from storage
+async function loadAutoSaveSettings() {
+  try {
+    const result = await chrome.storage.local.get(['autoSaveEnabled', 'autoSaveIntervalMinutes', 'currentStateName']);
+    autoSaveEnabled = result.autoSaveEnabled || false;
+    autoSaveInterval = result.autoSaveIntervalMinutes || 5;
+    currentStateName = result.currentStateName || null;
+  } catch (error) {
+    console.error('Error loading auto-save settings:', error);
+  }
+}
+
+// Setup auto-save based on current settings
+async function setupAutoSave() {
+  if (autoSaveEnabled) {
+    await createAutoSaveAlarm();
+  } else {
+    await clearAutoSaveAlarm();
+  }
+}
+
+// Create auto-save alarm
+async function createAutoSaveAlarm() {
+  try {
+    await chrome.alarms.clear(autoSaveAlarmName);
+    await chrome.alarms.create(autoSaveAlarmName, {
+      delayInMinutes: autoSaveInterval,
+      periodInMinutes: autoSaveInterval
+    });
+    console.log(`Auto-save alarm created with ${autoSaveInterval} minute interval`);
+  } catch (error) {
+    console.error('Error creating auto-save alarm:', error);
+  }
+}
+
+// Clear auto-save alarm
+async function clearAutoSaveAlarm() {
+  try {
+    await chrome.alarms.clear(autoSaveAlarmName);
+    console.log('Auto-save alarm cleared');
+  } catch (error) {
+    console.error('Error clearing auto-save alarm:', error);
+  }
+}
+
+// Handle alarm events
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === autoSaveAlarmName && autoSaveEnabled && currentStateName) {
+    console.log('Auto-save alarm triggered, saving current state...');
+    await autoSaveCurrentState();
+  }
+});
+
+// Auto-save current state
+async function autoSaveCurrentState() {
+  try {
+    if (!currentStateName) {
+      console.log('No current state name, skipping auto-save');
+      return;
+    }
+
+    console.log(`Auto-saving state: ${currentStateName}`);
+    await saveCurrentState(currentStateName);
+    console.log('Auto-save completed successfully');
+  } catch (error) {
+    console.error('Auto-save failed:', error);
+  }
+}
 
 // Handle messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -7,7 +92,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       saveCurrentState(request.stateName)
         .then(result => sendResponse(result))
         .catch(error => sendResponse({ success: false, error: error.message }));
-      return true; // Keep message channel open for async response
+      return true;
 
     case 'createNewState':
       createNewState(request.stateName)
@@ -32,8 +117,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .then(result => sendResponse(result))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
+
+    case 'updateAutoSave':
+      updateAutoSave(request.enabled, request.interval)
+        .then(result => sendResponse(result))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
   }
 });
+
+// Update auto-save settings
+async function updateAutoSave(enabled, interval) {
+  try {
+    autoSaveEnabled = enabled;
+    autoSaveInterval = interval;
+    
+    if (enabled) {
+      await createAutoSaveAlarm();
+    } else {
+      await clearAutoSaveAlarm();
+    }
+    
+    return { success: true, message: 'Auto-save settings updated' };
+  } catch (error) {
+    console.error('Error updating auto-save:', error);
+    throw new Error('Failed to update auto-save settings');
+  }
+}
 
 // Save current bookmarks bar as a state
 async function saveCurrentState(stateName) {
@@ -170,11 +280,15 @@ async function switchToState(stateName) {
     
     console.log('Target state:', targetState);
 
-    // First, backup current bookmarks bar
-    const currentStateName = await getCurrentStateName();
-    if (currentStateName && currentStateName !== stateName) {
-      console.log(`Backing up current state: ${currentStateName}`);
-      await saveCurrentState(currentStateName);
+    // First, auto-save current bookmarks bar if auto-save is enabled
+    try {
+      const existingStateName = await getCurrentStateName();
+      if (autoSaveEnabled && existingStateName && existingStateName !== stateName) {
+        console.log(`Auto-saving current state: ${existingStateName}`);
+        await saveCurrentState(existingStateName);
+      }
+    } catch (autoSaveError) {
+      console.warn('Auto-save failed, continuing with state switch:', autoSaveError);
     }
 
     // Clear current bookmarks bar
@@ -230,6 +344,8 @@ async function switchToState(stateName) {
 
     // Update current state name
     await chrome.storage.local.set({ currentStateName: stateName });
+    currentStateName = stateName;
+    console.log(`Updated current state name to: ${stateName}`);
 
     return { success: true, message: `Switched to "${stateName}" state successfully` };
   } catch (error) {

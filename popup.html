@@ -17,6 +17,29 @@
 
     <div class="divider"></div>
 
+    <div class="settings">
+      <h3>Settings</h3>
+      <div class="setting-item">
+        <label class="toggle-label">
+          <input type="checkbox" id="autoSaveToggle">
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">Auto-save every 5 minutes</span>
+        </label>
+      </div>
+      <div class="setting-item">
+        <label for="autoSaveInterval">Auto-save interval:</label>
+        <select id="autoSaveInterval">
+          <option value="1">1 minute</option>
+          <option value="5" selected>5 minutes</option>
+          <option value="10">10 minutes</option>
+          <option value="15">15 minutes</option>
+          <option value="30">30 minutes</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
     <div class="saved-states">
       <h3>Saved States</h3>
       <div id="statesList"></div>
