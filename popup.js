@@ -253,6 +253,108 @@ document.addEventListener('DOMContentLoaded', function() {
   // Cleanup states
   cleanupStatesBtn.addEventListener('click', cleanupStates);
 
+  // Restore states
+  document.getElementById('restoreStates').addEventListener('click', async () => {
+    try {
+      showStatus('Restoring states...', 'info');
+      const response = await chrome.runtime.sendMessage({ action: 'restoreStates' });
+      if (response && response.success) {
+        showStatus(response.message, 'success');
+        await loadSavedStates(); // Refresh the states list
+      } else {
+        showStatus('Failed to restore states', 'error');
+      }
+    } catch (error) {
+      console.error('Error handling response:', error);
+      showStatus('Error during restore', 'error');
+    }
+  });
+
+  // Check storage
+  document.getElementById('checkStorage').addEventListener('click', async () => {
+    try {
+      showStatus('Checking storage...', 'info');
+      const response = await chrome.runtime.sendMessage({ action: 'checkStorage' });
+      if (response && response.success) {
+        showStatus(response.message, 'success');
+        console.log('Storage contents:', response.data);
+      } else {
+        showStatus('Failed to check storage', 'error');
+      }
+    } catch (error) {
+      console.error('Error handling response:', error);
+      showStatus('Error during storage check', 'error');
+    }
+  });
+
+  // Recover orphaned states
+  document.getElementById('recoverOrphaned').addEventListener('click', async () => {
+    try {
+      showStatus('Recovering orphaned states...', 'info');
+      const response = await chrome.runtime.sendMessage({ action: 'recoverOrphaned' });
+      if (response && response.success) {
+        showStatus(response.message, 'success');
+        await loadSavedStates(); // Refresh the states list
+      } else {
+        showStatus('Failed to recover orphaned states', 'error');
+      }
+    } catch (error) {
+      console.error('Error handling response:', error);
+      showStatus('Error during orphaned state recovery', 'error');
+    }
+  });
+
+  // Fix states
+  document.getElementById('fixStates').addEventListener('click', async () => {
+    try {
+      showStatus('Fixing states...', 'info');
+      const response = await chrome.runtime.sendMessage({ action: 'fixStates' });
+      if (response && response.success) {
+        showStatus(response.message, 'success');
+        await loadSavedStates(); // Refresh the states list
+      } else {
+        showStatus('Failed to fix states', 'error');
+      }
+    } catch (error) {
+      console.error('Error handling response:', error);
+      showStatus('Error during state fixing', 'error');
+    }
+  });
+
+  // Validate states
+  document.getElementById('validateStates').addEventListener('click', async () => {
+    try {
+      showStatus('Validating states...', 'info');
+      const response = await chrome.runtime.sendMessage({ action: 'validateStates' });
+      if (response && response.success) {
+        showStatus(response.message, 'success');
+        await loadSavedStates(); // Refresh the states list
+      } else {
+        showStatus('Failed to validate states', 'error');
+      }
+    } catch (error) {
+      console.error('Error handling response:', error);
+      showStatus('Error during state validation', 'error');
+    }
+  });
+
+  // Debug states
+  document.getElementById('debugStates').addEventListener('click', async () => {
+    try {
+      showStatus('Debugging states...', 'info');
+      const response = await chrome.runtime.sendMessage({ action: 'debugStates' });
+      if (response && response.success) {
+        showStatus(response.message, 'success');
+        console.log('Debug output:', response.data);
+      } else {
+        showStatus('Failed to debug states', 'error');
+      }
+    } catch (error) {
+      console.error('Error handling response:', error);
+      showStatus('Error during state debugging', 'error');
+    }
+  });
+
   // Handle export options
   includeBookmarksCheckbox.addEventListener('change', function() {
     privacyOptions.style.display = this.checked ? 'block' : 'none';
@@ -338,7 +440,14 @@ document.addEventListener('DOMContentLoaded', function() {
           includeBookmarks: includeBookmarks,
           privacyLevel: privacyLevel
         },
-        data: data
+        data: {
+          ...data,
+          // Ensure backup folder names are included for reliability
+          bookmarkStates: data.bookmarkStates ? data.bookmarkStates.map(state => ({
+            ...state,
+            backupFolderName: state.backupFolderName || state.name // Fallback to state name if missing
+          })) : []
+        }
       };
       
       // If including bookmarks, fetch the actual bookmark content
@@ -514,18 +623,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // Then restore bookmark content for each state
     if (data.bookmarkStates) {
       for (const state of data.bookmarkStates) {
-        if (state.bookmarks && state.backupFolderId) {
+        if (state.bookmarks) {
           try {
-            // Clear existing content in the backup folder
-            const existingChildren = await chrome.bookmarks.getChildren(state.backupFolderId);
-            for (const child of existingChildren) {
-              await chrome.bookmarks.removeTree(child.id);
+            // Find or create the backup folder
+            let backupFolderId = state.backupFolderId;
+            
+            if (!backupFolderId && state.backupFolderName) {
+              // Try to find existing folder by name
+              const otherBookmarks = await chrome.bookmarks.getChildren('2');
+              const existingFolder = otherBookmarks.find(f => f.title === state.backupFolderName);
+              
+              if (existingFolder) {
+                backupFolderId = existingFolder.id;
+                console.log(`Found existing folder for state "${state.name}": ${existingFolder.title}`);
+              } else {
+                // Create new folder
+                const newFolder = await chrome.bookmarks.create({
+                  parentId: '2', // Other Bookmarks
+                  title: state.backupFolderName
+                });
+                backupFolderId = newFolder.id;
+                console.log(`Created new folder for state "${state.name}": ${newFolder.title}`);
+              }
             }
             
-            // Restore bookmarks from the export
-            await restoreBookmarksFromExport(state.bookmarks, state.backupFolderId);
-            
-            console.log(`Restored bookmarks for state: ${state.name}`);
+            if (backupFolderId) {
+              // Clear existing content in the backup folder
+              const existingChildren = await chrome.bookmarks.getChildren(backupFolderId);
+              for (const child of existingChildren) {
+                await chrome.bookmarks.removeTree(child.id);
+              }
+              
+              // Restore bookmarks from the export
+              await restoreBookmarksFromExport(state.bookmarks, backupFolderId);
+              
+              console.log(`Restored bookmarks for state: ${state.name}`);
+            } else {
+              console.warn(`No backup folder ID or name for state: ${state.name}`);
+            }
           } catch (error) {
             console.warn(`Failed to restore bookmarks for state ${state.name}:`, error);
           }

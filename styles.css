@@ -5,7 +5,7 @@
 }
 
 body {
-  width: 380px;
+  width: 450px;
   min-height: 500px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background: #f8f9fa;
@@ -270,12 +270,25 @@ button.danger:hover {
 
 .data-actions {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 15px;
 }
 
 .data-actions button {
-  flex: 1;
+  flex: 1 1 calc(50% - 4px);
+  min-width: 120px;
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+/* Ensure buttons don't get too small on narrow screens */
+@media (max-width: 480px) {
+  .data-actions button {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
 }
 
 .export-options {
