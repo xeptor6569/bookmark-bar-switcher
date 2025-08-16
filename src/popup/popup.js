@@ -1,5 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
-  const currentStateNameInput = document.getElementById('currentStateName');
+  // First-time setup elements
+  const firstTimeSetup = document.getElementById('firstTimeSetup');
+  const mainInterface = document.getElementById('mainInterface');
+  const firstStateNameInput = document.getElementById('firstStateName');
+  const createFirstStateBtn = document.getElementById('createFirstState');
+  const skipSetupBtn = document.getElementById('skipSetup');
+
+  // Main interface elements
   const saveCurrentStateBtn = document.getElementById('saveCurrentState');
   const createNewStateBtn = document.getElementById('createNewState');
   const refreshStatesBtn = document.getElementById('refreshStates');
@@ -19,19 +26,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const privacyOptions = document.getElementById('privacyOptions');
   const privacyLevelSelect = document.getElementById('privacyLevel');
 
-  // First-time setup elements
-  const firstTimeSetup = document.getElementById('firstTimeSetup');
-  const mainInterface = document.getElementById('mainInterface');
-  const firstStateNameInput = document.getElementById('firstStateName');
-  const createFirstStateBtn = document.getElementById('createFirstState');
-  const skipSetupBtn = document.getElementById('skipSetup');
-
   // Load current state name and settings from storage
   chrome.storage.sync.get(
     ['currentStateName', 'autoSaveEnabled', 'autoSaveIntervalMinutes'],
     function (result) {
       if (result.currentStateName) {
-        currentStateNameInput.value = result.currentStateName;
+        // Store the current state name globally so displayStates can access it
+        window.currentStateName = result.currentStateName;
       }
 
       if (result.autoSaveEnabled !== undefined) {
@@ -85,7 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
           mainInterface.style.display = 'block';
 
           // Set the current state name
-          currentStateNameInput.value = stateName;
+          // This line is no longer needed as currentStateNameInput is removed
+          // currentStateNameInput.value = stateName;
 
           // Load the states list
           loadSavedStates();
@@ -172,12 +174,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Save current state
   saveCurrentStateBtn.addEventListener('click', function () {
-    const stateName = currentStateNameInput.value.trim();
-    if (!stateName) {
-      showStatus('Please enter a state name', 'error');
+    // Get the currently active state name from the highlighted state in the list
+    const activeStateItem = document.querySelector('.state-item.active-state');
+    if (!activeStateItem) {
+      showStatus('No active state to save', 'error');
       return;
     }
-
+    
+    const stateName = activeStateItem.querySelector('.state-name').textContent;
+    
+    // Save the current bookmark bar state to the active state
     chrome.runtime.sendMessage(
       {
         action: 'saveCurrentState',
@@ -185,18 +191,8 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       function (response) {
         if (response.success) {
-          showStatus(`Current state saved as "${stateName}"`, 'success');
-          chrome.storage.sync.set({ currentStateName: stateName }, () => {
-            if (chrome.runtime.lastError) {
-              showStatus(
-                `Failed to save state name: ${chrome.runtime.lastError.message}`,
-                'error'
-              );
-              return;
-            }
-            loadSavedStates();
-            checkSyncStatus();
-          });
+          showStatus(`Current state saved to "${stateName}"`, 'success');
+          loadSavedStates(); // Refresh the display
         } else {
           showStatus(response.error || 'Failed to save current state', 'error');
         }
@@ -262,7 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
       stateItem.className = 'state-item';
       
       // Check if this is the current active state
-      const isActive = state.name === currentStateNameInput.value;
+      const currentStateName = getCurrentStateNameFromStorage();
+      const isActive = state.name === currentStateName;
       if (isActive) {
         stateItem.classList.add('active-state');
       }
@@ -320,8 +317,10 @@ document.addEventListener('DOMContentLoaded', function () {
       function (response) {
         if (response.success) {
           showStatus(`Switched to "${stateName}" state`, 'success');
-          currentStateNameInput.value = stateName;
-          chrome.storage.local.set({ currentStateName: stateName });
+          // Update the global current state name
+          window.currentStateName = stateName;
+          // Save to storage
+          chrome.storage.sync.set({ currentStateName: stateName });
           loadSavedStates();
         } else {
           console.error('Switch state error:', response.error);
@@ -754,9 +753,10 @@ document.addEventListener('DOMContentLoaded', function () {
       checkSyncStatus();
 
       // Update UI with imported data
-      if (data.currentStateName) {
-        currentStateNameInput.value = data.currentStateName;
-      }
+      // This line is no longer needed as currentStateNameInput is removed
+      // if (data.currentStateName) {
+      //   currentStateNameInput.value = data.currentStateName;
+      // }
 
       if (data.autoSaveEnabled !== undefined) {
         autoSaveToggle.checked = data.autoSaveEnabled;
@@ -1033,9 +1033,10 @@ document.addEventListener('DOMContentLoaded', function () {
         showStatus(`State renamed to "${newName}"`, 'success');
         
         // Update current state name if it was renamed
-        if (currentStateNameInput.value === oldName) {
-          currentStateNameInput.value = newName;
-        }
+        // This line is no longer needed as currentStateNameInput is removed
+        // if (currentStateNameInput.value === oldName) {
+        //   currentStateNameInput.value = newName;
+        // }
         
         // Refresh the states list
         loadSavedStates();
@@ -1051,4 +1052,25 @@ document.addEventListener('DOMContentLoaded', function () {
       loadSavedStates();
     }
   }
+
+  // Get current state name from storage
+  function getCurrentStateNameFromStorage() {
+    // This function needs to be async to properly get from storage
+    // For now, we'll use a global variable that gets set when loading
+    return window.currentStateName || null;
+  }
+
+  // Check if this is first-time setup
+  chrome.storage.sync.get(['bookmarkStates'], function (result) {
+    if (!result.bookmarkStates || result.bookmarkStates.length === 0) {
+      // First time - show setup screen
+      firstTimeSetup.style.display = 'block';
+      mainInterface.style.display = 'none';
+    } else {
+      // Has existing states - show main interface
+      firstTimeSetup.style.display = 'none';
+      mainInterface.style.display = 'block';
+      loadSavedStates();
+    }
+  });
 });
