@@ -527,6 +527,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         )
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
+
+    case 'renameState':
+      renameState(request.oldName, request.newName)
+        .then(result => sendResponse(result))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
   }
 });
 
@@ -863,6 +869,71 @@ async function deleteState(stateName) {
   } catch (error) {
     console.error('Error deleting state:', error);
     throw new Error('Failed to delete state');
+  }
+}
+
+// Rename a state
+async function renameState(oldName, newName) {
+  try {
+    console.log(`Renaming state from "${oldName}" to "${newName}"`);
+
+    // Validate new name
+    if (!newName || newName.trim().length === 0) {
+      throw new Error('New state name cannot be empty');
+    }
+
+    if (newName.length > 50) {
+      throw new Error('State name cannot exceed 50 characters');
+    }
+
+    const states = await getStoredStates();
+    const stateIndex = states.findIndex(s => s.name === oldName);
+
+    if (stateIndex === -1) {
+      throw new Error('State not found');
+    }
+
+    // Check if new name already exists
+    const existingState = states.find(s => s.name === newName);
+    if (existingState && existingState.name !== oldName) {
+      throw new Error('State with this name already exists');
+    }
+
+    const state = states[stateIndex];
+    const oldFolderName = state.backupFolderName;
+
+    // Rename the backup folder
+    if (state.backupFolderId) {
+      try {
+        await chrome.bookmarks.update(state.backupFolderId, { title: newName });
+        console.log(`Renamed backup folder from "${oldFolderName}" to "${newName}"`);
+      } catch (e) {
+        console.warn('Could not rename backup folder:', e);
+      }
+    }
+
+    // Update state information
+    state.name = newName;
+    state.backupFolderName = newName;
+    state.lastUpdated = new Date().toISOString();
+
+    // Update storage
+    await chrome.storage.sync.set({ bookmarkStates: states });
+
+    // Update current state name if it was renamed
+    const currentStateName = await getCurrentStateName();
+    if (currentStateName === oldName) {
+      await chrome.storage.sync.set({ currentStateName: newName });
+      console.log(`Updated current state name from "${oldName}" to "${newName}"`);
+    }
+
+    return {
+      success: true,
+      message: `State renamed from "${oldName}" to "${newName}" successfully`,
+    };
+  } catch (error) {
+    console.error('Error renaming state:', error);
+    throw new Error(`Failed to rename state: ${error.message}`);
   }
 }
 

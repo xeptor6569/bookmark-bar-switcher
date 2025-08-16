@@ -267,32 +267,114 @@ button.danger:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
+  padding: 15px;
   background: white;
   border: 1px solid #dadce0;
-  border-radius: 4px;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
 }
 
 .state-item:hover {
   border-color: #1a73e8;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.15);
+  transform: translateY(-1px);
+}
+
+.state-item.active-state {
+  border-color: #34a853;
+  background: linear-gradient(135deg, #f8fff9 0%, #e6f4ea 100%);
+  box-shadow: 0 2px 8px rgba(52, 168, 83, 0.2);
+}
+
+.state-info {
+  flex: 1;
+  margin-right: 15px;
+}
+
+.state-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
 }
 
 .state-name {
-  font-size: 14px;
+  font-size: 16px;
   color: #202124;
+  font-weight: 600;
+}
+
+.state-name.active {
+  color: #34a853;
+}
+
+.active-indicator {
+  background: #34a853;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.state-meta {
+  color: #5f6368;
+}
+
+.state-date {
+  font-size: 11px;
+  font-style: italic;
 }
 
 .state-actions {
   display: flex;
-  gap: 5px;
+  gap: 8px;
+  align-items: center;
 }
 
 .state-actions button {
-  padding: 4px 8px;
+  padding: 6px 10px;
   font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.rename-btn {
+  background: #f1f3f4;
+  color: #5f6368;
+  border: 1px solid #dadce0;
+  padding: 4px 8px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rename-btn:hover {
+  background: #e8eaed;
+  border-color: #1a73e8;
+  color: #1a73e8;
+}
+
+.rename-input {
+  background: white;
+  border: 2px solid #1a73e8;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #202124;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+  min-width: 120px;
+}
+
+.rename-input:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
 }
 
 /* Status */

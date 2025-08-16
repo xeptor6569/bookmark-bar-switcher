@@ -260,10 +260,25 @@ document.addEventListener('DOMContentLoaded', function () {
     states.forEach(state => {
       const stateItem = document.createElement('div');
       stateItem.className = 'state-item';
+      
+      // Check if this is the current active state
+      const isActive = state.name === currentStateNameInput.value;
+      if (isActive) {
+        stateItem.classList.add('active-state');
+      }
 
       stateItem.innerHTML = `
-        <span class="state-name">${state.name}</span>
+        <div class="state-info">
+          <div class="state-header">
+            <span class="state-name ${isActive ? 'active' : ''}">${state.name}</span>
+            ${isActive ? '<span class="active-indicator">✓ Active</span>' : ''}
+          </div>
+          <div class="state-meta">
+            <small class="state-date">Last updated: ${formatDate(state.lastUpdated)}</small>
+          </div>
+        </div>
         <div class="state-actions">
+          <button class="rename-btn" data-state-name="${state.name}" title="Rename state">✏️</button>
           <button class="switch-btn" data-state-name="${state.name}">Switch To</button>
           <button class="delete-btn danger" data-state-name="${state.name}">Delete</button>
         </div>
@@ -272,6 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Add event listeners
       const switchBtn = stateItem.querySelector('.switch-btn');
       const deleteBtn = stateItem.querySelector('.delete-btn');
+      const renameBtn = stateItem.querySelector('.rename-btn');
 
       switchBtn.addEventListener('click', function () {
         const stateName = this.getAttribute('data-state-name');
@@ -281,6 +297,11 @@ document.addEventListener('DOMContentLoaded', function () {
       deleteBtn.addEventListener('click', function () {
         const stateName = this.getAttribute('data-state-name');
         deleteState(stateName);
+      });
+
+      renameBtn.addEventListener('click', function () {
+        const stateName = this.getAttribute('data-state-name');
+        startRenameState(stateName, stateItem);
       });
 
       statesList.appendChild(stateItem);
@@ -882,4 +903,95 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Load saved states on popup open
   loadSavedStates();
+
+  // Helper function to format dates
+  function formatDate(dateString) {
+    if (!dateString) return 'Unknown';
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) return 'Today';
+      if (diffDays === 2) return 'Yesterday';
+      if (diffDays <= 7) return `${diffDays - 1} days ago`;
+      
+      return date.toLocaleDateString();
+    } catch (error) {
+      return 'Unknown';
+    }
+  }
+
+  // Start renaming a state
+  function startRenameState(stateName, stateItem) {
+    const stateInfo = stateItem.querySelector('.state-info');
+    const currentName = stateInfo.querySelector('.state-name');
+    
+    // Create input field for renaming
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = stateName;
+    input.className = 'rename-input';
+    input.maxLength = 50;
+    
+    // Replace name with input
+    currentName.style.display = 'none';
+    stateInfo.insertBefore(input, currentName);
+    input.focus();
+    input.select();
+    
+    // Handle input events
+    const handleRename = () => {
+      const newName = input.value.trim();
+      if (newName && newName !== stateName) {
+        renameState(stateName, newName);
+      } else {
+        // Cancel rename
+        input.remove();
+        currentName.style.display = 'inline';
+      }
+    };
+    
+    input.addEventListener('blur', handleRename);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        handleRename();
+      } else if (e.key === 'Escape') {
+        input.remove();
+        currentName.style.display = 'inline';
+      }
+    });
+  }
+
+  // Rename a state
+  async function renameState(oldName, newName) {
+    try {
+      showStatus(`Renaming state "${oldName}" to "${newName}"...`, 'info');
+      
+      // Send message to background script to rename state
+      const response = await chrome.runtime.sendMessage({
+        action: 'renameState',
+        oldName: oldName,
+        newName: newName
+      });
+      
+      if (response && response.success) {
+        showStatus(`State renamed to "${newName}"`, 'success');
+        
+        // Update current state name if it was renamed
+        if (currentStateNameInput.value === oldName) {
+          currentStateNameInput.value = newName;
+        }
+        
+        // Refresh the states list
+        loadSavedStates();
+      } else {
+        showStatus(response.error || 'Failed to rename state', 'error');
+      }
+    } catch (error) {
+      console.error('Error renaming state:', error);
+      showStatus('Failed to rename state', 'error');
+    }
+  }
 });
