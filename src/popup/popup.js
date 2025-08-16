@@ -926,47 +926,100 @@ document.addEventListener('DOMContentLoaded', function () {
   // Start renaming a state
   function startRenameState(stateName, stateItem) {
     const stateInfo = stateItem.querySelector('.state-info');
-    const currentName = stateInfo.querySelector('.state-name');
+    const stateActions = stateItem.querySelector('.state-actions');
     
-    // Create input field for renaming
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = stateName;
-    input.className = 'rename-input';
-    input.maxLength = 50;
+    // Create editing interface
+    const editInterface = `
+      <div class="edit-state-interface">
+        <div class="edit-header">
+          <span class="edit-label">Rename State</span>
+        </div>
+        <div class="edit-input-container">
+          <input type="text" class="rename-input" value="${stateName}" maxlength="50" />
+        </div>
+        <div class="edit-actions">
+          <button class="save-rename-btn primary">Save</button>
+          <button class="cancel-rename-btn secondary">Cancel</button>
+        </div>
+      </div>
+    `;
     
-    // Replace name with input
-    currentName.style.display = 'none';
-    stateInfo.insertBefore(input, currentName);
+    // Hide normal state and show editing interface
+    stateInfo.style.display = 'none';
+    stateActions.style.display = 'none';
+    
+    // Insert editing interface
+    stateItem.insertAdjacentHTML('beforeend', editInterface);
+    
+    // Get references to new elements
+    const editInterfaceElement = stateItem.querySelector('.edit-state-interface');
+    const input = editInterfaceElement.querySelector('.rename-input');
+    const saveBtn = editInterfaceElement.querySelector('.save-rename-btn');
+    const cancelBtn = editInterfaceElement.querySelector('.cancel-rename-btn');
+    
+    // Focus and select input
     input.focus();
     input.select();
     
-    // Handle input events
-    const handleRename = () => {
+    // Handle save button
+    saveBtn.addEventListener('click', () => {
       const newName = input.value.trim();
       if (newName && newName !== stateName) {
         renameState(stateName, newName);
+      } else if (newName === stateName) {
+        // No changes made
+        cancelRename();
       } else {
-        // Cancel rename
-        input.remove();
-        currentName.style.display = 'inline';
-      }
-    };
-    
-    input.addEventListener('blur', handleRename);
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        handleRename();
-      } else if (e.key === 'Escape') {
-        input.remove();
-        currentName.style.display = 'inline';
+        showStatus('State name cannot be empty', 'error');
+        input.focus();
       }
     });
+    
+    // Handle cancel button
+    cancelBtn.addEventListener('click', cancelRename);
+    
+    // Handle Enter key
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveBtn.click();
+      } else if (e.key === 'Escape') {
+        cancelRename();
+      }
+    });
+    
+    // Handle input validation
+    input.addEventListener('input', (e) => {
+      const value = e.target.value.trim();
+      saveBtn.disabled = !value || value === stateName;
+    });
+    
+    // Function to cancel and restore original state
+    function cancelRename() {
+      editInterfaceElement.remove();
+      stateInfo.style.display = 'block';
+      stateActions.style.display = 'flex';
+    }
   }
 
   // Rename a state
   async function renameState(oldName, newName) {
     try {
+      // Validate input
+      if (!newName || newName.trim().length === 0) {
+        showStatus('State name cannot be empty', 'error');
+        return;
+      }
+
+      if (newName.length > 50) {
+        showStatus('State name cannot exceed 50 characters', 'error');
+        return;
+      }
+
+      if (newName === oldName) {
+        showStatus('No changes made', 'info');
+        return;
+      }
+
       showStatus(`Renaming state "${oldName}" to "${newName}"...`, 'info');
       
       // Send message to background script to rename state
@@ -988,10 +1041,14 @@ document.addEventListener('DOMContentLoaded', function () {
         loadSavedStates();
       } else {
         showStatus(response.error || 'Failed to rename state', 'error');
+        // Refresh states list to restore original state
+        loadSavedStates();
       }
     } catch (error) {
       console.error('Error renaming state:', error);
       showStatus('Failed to rename state', 'error');
+      // Refresh states list to restore original state
+      loadSavedStates();
     }
   }
 });
