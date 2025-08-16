@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const status = document.getElementById('status');
   const autoSaveToggle = document.getElementById('autoSaveToggle');
   const autoSaveInterval = document.getElementById('autoSaveInterval');
+  const popOutBtn = document.getElementById('popOutBtn');
   const exportStatesBtn = document.getElementById('exportStates');
   const performExportBtn = document.getElementById('performExport');
   const importStatesBtn = document.getElementById('importStates');
@@ -25,6 +26,23 @@ document.addEventListener('DOMContentLoaded', function () {
   const includeBookmarksCheckbox = document.getElementById('includeBookmarks');
   const privacyOptions = document.getElementById('privacyOptions');
   const privacyLevelSelect = document.getElementById('privacyLevel');
+
+  // Pop out button handler
+  popOutBtn.addEventListener('click', function() {
+    popOutExtension();
+  });
+
+  // Pop out extension to new window
+  function popOutExtension() {
+    chrome.runtime.sendMessage({ action: 'popOut' }, (response) => {
+      if (response && response.success) {
+        // Close the popup after successfully opening the new window
+        window.close();
+      } else {
+        console.error('Failed to pop out:', response?.error);
+      }
+    });
+  }
 
   // Load current state name and settings from storage
   chrome.storage.sync.get(

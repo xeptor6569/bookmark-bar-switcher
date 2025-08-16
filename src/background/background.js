@@ -533,6 +533,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .then(result => sendResponse(result))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
+
+    case 'popOut':
+      chrome.windows.create({
+        url: chrome.runtime.getURL('popup.html'),
+        type: 'popup',
+        width: 450,
+        height: 700,
+        focused: true
+      }).then(window => {
+        // Send response to close the popup
+        sendResponse({ success: true, windowId: window.id });
+      }).catch(error => {
+        console.error('Error creating pop-out window:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+      return true; // Keep message channel open for async response
+
+    // Handle rename state request
   }
 });
 

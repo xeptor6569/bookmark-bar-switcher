@@ -12,8 +12,51 @@ body {
   background: #f8f9fa;
 }
 
+/* Header styles */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e8eaed;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e8eaed 100%);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 18px;
+  color: #202124;
+  font-weight: 600;
+}
+
+.pop-out-btn {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pop-out-btn:hover {
+  background: #1557b0;
+  transform: scale(1.05);
+}
+
+.pop-out-btn:active {
+  transform: scale(0.95);
+}
+
+/* Container adjustment for header */
 .container {
-  padding: 20px;
+  padding: 0;
 }
 
 /* First-time setup styles */
