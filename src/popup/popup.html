@@ -8,7 +8,10 @@
   <body>
     <div class="header">
       <h1>Bookmarks Bar Switcher</h1>
-      <button id="popOutBtn" class="pop-out-btn" title="Open in new window">⤢</button>
+      <div class="header-actions">
+        <button id="saveCurrentState" class="save-btn" title="Save current state manually">💾</button>
+        <button id="popOutBtn" class="pop-out-btn" title="Open in new window">⤢</button>
+      </div>
     </div>
 
     <div class="container">
@@ -32,14 +35,6 @@
 
       <!-- Main interface (hidden until setup is complete) -->
       <div id="mainInterface" style="display: none">
-        <!-- Current State Section -->
-        <div class="current-state">
-          <h3>Manual Save</h3>
-          <button id="saveCurrentState" class="primary">Save Current State</button>
-        </div>
-
-        <div class="divider"></div>
-
         <!-- Saved States Section -->
         <div class="saved-states">
           <h3>Saved States</h3>

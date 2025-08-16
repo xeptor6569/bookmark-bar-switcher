@@ -1,5 +1,5 @@
 * {
-  margin: 0;
+  margin: 1px;
   padding: 0;
   box-sizing: border-box;
 }
@@ -27,6 +27,37 @@ body {
   font-size: 18px;
   color: #202124;
   font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.save-btn {
+  background: #34a853;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-btn:hover {
+  background: #2d8f47;
+  transform: scale(1.05);
+}
+
+.save-btn:active {
+  transform: scale(0.95);
 }
 
 .pop-out-btn {
@@ -131,91 +162,103 @@ h3 {
   margin-bottom: 15px;
 }
 
-/* Current State Styles */
-.current-state {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.current-state h3 {
-  margin-bottom: 15px;
-}
-
-.current-state button {
-  min-width: 160px;
-}
-
-/* Settings Styles */
+/* Settings Section */
 .settings {
   margin-bottom: 20px;
+  background: white;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings h3 {
+  margin-bottom: 15px;
+  color: #202124;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .setting-item {
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 15px;
+}
+
+.setting-item:last-child {
+  margin-bottom: 0;
 }
 
 .setting-item label {
-  font-size: 12px;
   color: #5f6368;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .setting-item select {
-  padding: 4px 8px;
+  padding: 6px 12px;
   border: 1px solid #dadce0;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 14px;
+  color: #202124;
   background: white;
+  cursor: pointer;
 }
 
-/* Toggle Switch */
+.setting-item select:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* Toggle Switch Styles */
 .toggle-label {
   display: flex;
   align-items: center;
+  gap: 12px;
   cursor: pointer;
   user-select: none;
 }
 
-.toggle-label input[type='checkbox'] {
-  display: none;
-}
-
 .toggle-slider {
   position: relative;
-  width: 40px;
-  height: 20px;
+  width: 44px;
+  height: 24px;
   background: #dadce0;
-  border-radius: 20px;
-  margin-right: 10px;
-  transition: background 0.3s;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.toggle-slider:before {
+.toggle-slider::before {
   content: '';
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   background: white;
   border-radius: 50%;
-  transition: transform 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-label input[type='checkbox']:checked + .toggle-slider {
+.toggle-label input:checked + .toggle-slider {
   background: #34a853;
 }
 
-.toggle-label input[type='checkbox']:checked + .toggle-slider:before {
+.toggle-label input:checked + .toggle-slider::before {
   transform: translateX(20px);
 }
 
+.toggle-label input {
+  display: none;
+}
+
 .toggle-text {
-  font-size: 12px;
   color: #5f6368;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -263,69 +306,68 @@ button.danger:hover {
   background: #d93025;
 }
 
-/* Divider */
+/* Divider Styles */
 .divider {
   height: 1px;
-  background: #dadce0;
+  background: linear-gradient(90deg, transparent, #e8eaed, transparent);
   margin: 20px 0;
 }
 
-/* Saved States Styles */
+/* Saved States Section */
 .saved-states {
   margin-bottom: 20px;
 }
 
-.state-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
+.saved-states h3 {
+  margin-bottom: 15px;
 }
 
-.state-actions button {
-  flex: 1;
-}
-
-/* State Items */
 .state-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px;
   background: white;
-  border: 1px solid #dadce0;
-  border-radius: 6px;
-  margin-bottom: 10px;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .state-item:hover {
-  border-color: #1a73e8;
-  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.15);
+  border-color: #dadce0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
 
 .state-item.active-state {
   border-color: #34a853;
   background: linear-gradient(135deg, #f8fff9 0%, #e6f4ea 100%);
-  box-shadow: 0 2px 8px rgba(52, 168, 83, 0.2);
+  box-shadow: 0 2px 12px rgba(52, 168, 83, 0.25);
 }
 
-.state-info {
-  flex: 1;
-  margin-right: 15px;
+.state-item.active-state::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #34a853;
 }
 
 .state-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 5px;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
 .state-name {
   font-size: 16px;
-  color: #202124;
   font-weight: 600;
+  color: #202124;
+  flex: 1;
 }
 
 .state-name.active {
@@ -335,21 +377,22 @@ button.danger:hover {
 .active-indicator {
   background: #34a853;
   color: white;
-  padding: 2px 8px;
+  padding: 4px 8px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-left: 8px;
 }
 
 .state-meta {
-  color: #5f6368;
+  margin-bottom: 12px;
 }
 
 .state-date {
-  font-size: 11px;
-  font-style: italic;
+  color: #5f6368;
+  font-size: 13px;
 }
 
 .state-actions {
@@ -359,27 +402,57 @@ button.danger:hover {
 }
 
 .state-actions button {
-  padding: 6px 10px;
-  font-size: 12px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #dadce0;
+  background: white;
+  color: #5f6368;
+  cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.state-actions button:hover {
+  background: #f8f9fa;
+  border-color: #1a73e8;
+  color: #1a73e8;
+}
+
+.state-actions button.primary {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+}
+
+.state-actions button.primary:hover {
+  background: #1557b0;
+  border-color: #1557b0;
+}
+
+.state-actions button.danger {
+  background: #ea4335;
+  color: white;
+  border-color: #ea4335;
+}
+
+.state-actions button.danger:hover {
+  background: #d93025;
+  border-color: #d93025;
 }
 
 .rename-btn {
-  background: #f1f3f4;
-  color: #5f6368;
-  border: 1px solid #dadce0;
-  padding: 4px 8px;
-  font-size: 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  background: #f8f9fa !important;
+  color: #5f6368 !important;
+  border-color: #dadce0 !important;
+  padding: 6px 8px !important;
+  min-width: 36px !important;
+  font-size: 14px !important;
 }
 
 .rename-btn:hover {
-  background: #e8eaed;
-  border-color: #1a73e8;
-  color: #1a73e8;
+  background: #e8eaed !important;
+  color: #202124 !important;
 }
 
 .rename-input {
@@ -400,67 +473,155 @@ button.danger:hover {
   box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
 }
 
-/* Status */
+/* Status Message Styles */
 .status {
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  text-align: center;
-  min-height: 20px;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease;
 }
 
 .status.success {
-  background: #e6f4ea;
-  color: #137333;
-  border: 1px solid #34a853;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
 .status.error {
-  background: #fce8e6;
-  color: #c5221f;
-  border: 1px solid #ea4335;
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
 .status.info {
-  background: #e8f0fe;
-  color: #1967d2;
-  border: 1px solid #1a73e8;
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
 }
 
-/* Empty State */
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Empty State Styles */
 .empty-state {
   text-align: center;
-  color: #5f6368;
+  padding: 40px 20px;
+  color: #9aa0a6;
+  font-size: 14px;
   font-style: italic;
-  padding: 20px;
 }
 
-/* Data Management */
+/* Data Management Section */
 .data-management {
   margin-bottom: 20px;
+  background: white;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.data-management h3 {
+  margin-bottom: 15px;
+  color: #202124;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .data-actions {
   display: flex;
+  gap: 10px;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 15px;
 }
 
 .data-actions button {
-  flex: 1 1 calc(50% - 4px);
-  min-width: 120px;
-  white-space: nowrap;
-  font-size: 12px;
-  padding: 8px 12px;
+  padding: 8px 16px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: white;
+  color: #5f6368;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
 }
 
-/* Ensure buttons don't get too small on narrow screens */
-@media (max-width: 480px) {
-  .data-actions button {
-    flex: 1 1 100%;
-    min-width: auto;
-  }
+.data-actions button:hover {
+  background: #f8f9fa;
+  border-color: #1a73e8;
+  color: #1a73e8;
+}
+
+.data-actions button.primary {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+}
+
+.data-actions button.primary:hover {
+  background: #1557b0;
+  border-color: #1557b0;
+}
+
+/* Debug Mode Section */
+.debug-mode {
+  margin-bottom: 20px;
+  background: white;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.debug-mode h3 {
+  margin-bottom: 15px;
+  color: #202124;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.debug-toggle {
+  margin-bottom: 15px;
+}
+
+.debug-options {
+  padding-top: 15px;
+  border-top: 1px solid #e8eaed;
+}
+
+.debug-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.debug-info {
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e8eaed;
+}
+
+.debug-info small {
+  color: #5f6368;
+  font-size: 12px;
 }
 
 /* Export Options */
@@ -594,56 +755,66 @@ button.danger:hover {
 /* Keyboard Shortcuts Styles */
 .keyboard-shortcuts {
   margin-bottom: 20px;
+  background: white;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.keyboard-shortcuts h3 {
+  margin-bottom: 15px;
+  color: #202124;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .shortcut-list {
-  background: #f8f9fa;
-  border: 1px solid #dadce0;
-  border-radius: 6px;
-  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .shortcut-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #e8eaed;
-}
-
-.shortcut-item:last-child {
-  border-bottom: none;
+  gap: 12px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e8eaed;
 }
 
 .shortcut-key {
-  background: #e8eaed;
-  color: #5f6368;
+  background: #1a73e8;
+  color: white;
   padding: 4px 8px;
   border-radius: 4px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
+  font-family: 'Courier New', monospace;
   min-width: 80px;
   text-align: center;
 }
 
 .shortcut-description {
-  font-size: 12px;
   color: #5f6368;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .shortcut-note {
   margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e8eaed;
+  padding: 10px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
   text-align: center;
 }
 
 .shortcut-note small {
-  color: #9aa0a6;
-  font-size: 11px;
-  font-style: italic;
+  color: #856404;
+  font-size: 12px;
 }
 
 /* Edit State Interface */
