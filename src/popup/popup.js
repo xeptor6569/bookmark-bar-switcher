@@ -354,160 +354,112 @@ document.addEventListener('DOMContentLoaded', function () {
   // Cleanup states
   cleanupStatesBtn.addEventListener('click', cleanupStates);
 
-  // Restore states
-  document
-    .getElementById('restoreStates')
-    .addEventListener('click', async () => {
-      try {
-        showStatus('Restoring states...', 'info');
-        const response = await chrome.runtime.sendMessage({
-          action: 'restoreStates',
-        });
-        if (response && response.success) {
-          showStatus(response.message, 'success');
-          await loadSavedStates(); // Refresh the states list
-        } else {
-          showStatus('Failed to restore states', 'error');
-        }
-      } catch (error) {
-        console.error('Error handling response:', error);
-        showStatus('Error during restore', 'error');
-      }
-    });
+  // Debug mode toggle
+  const debugModeToggle = document.getElementById('debugModeToggle');
+  const debugOptions = document.getElementById('debugOptions');
 
-  // Check storage
-  document
-    .getElementById('checkStorage')
-    .addEventListener('click', async () => {
-      try {
-        showStatus('Checking storage...', 'info');
-        const response = await chrome.runtime.sendMessage({
-          action: 'checkStorage',
-        });
-        if (response && response.success) {
-          showStatus(response.message, 'success');
-          console.log('Storage contents:', response.data);
-        } else {
-          showStatus('Failed to check storage', 'error');
-        }
-      } catch (error) {
-        console.error('Error handling response:', error);
-        showStatus('Error during storage check', 'error');
-      }
-    });
+  debugModeToggle.addEventListener('change', function() {
+    debugOptions.style.display = this.checked ? 'block' : 'none';
+    
+    // Save debug mode preference
+    chrome.storage.sync.set({ debugModeEnabled: this.checked });
+  });
 
-  // Recover orphaned states
-  document
-    .getElementById('recoverOrphaned')
-    .addEventListener('click', async () => {
-      try {
-        showStatus('Recovering orphaned states...', 'info');
-        const response = await chrome.runtime.sendMessage({
-          action: 'recoverOrphaned',
-        });
-        if (response && response.success) {
-          showStatus(response.message, 'success');
-          await loadSavedStates(); // Refresh the states list
-        } else {
-          showStatus('Failed to recover orphaned states', 'error');
-        }
-      } catch (error) {
-        console.error('Error handling response:', error);
-        showStatus('Error during orphaned state recovery', 'error');
-      }
-    });
+  // Load debug mode preference
+  chrome.storage.sync.get(['debugModeEnabled'], function(result) {
+    if (result.debugModeEnabled) {
+      debugModeToggle.checked = true;
+      debugOptions.style.display = 'block';
+    }
+  });
 
-  // Fix states
-  document.getElementById('fixStates').addEventListener('click', async () => {
+  // Validate states
+  document.getElementById('validateStates').addEventListener('click', async () => {
     try {
-      showStatus('Fixing states...', 'info');
+      showStatus('Validating states...', 'info');
       const response = await chrome.runtime.sendMessage({
-        action: 'fixStates',
+        action: 'validateStates',
       });
       if (response && response.success) {
         showStatus(response.message, 'success');
         await loadSavedStates(); // Refresh the states list
       } else {
-        showStatus('Failed to fix states', 'error');
+        showStatus('Failed to validate states', 'error');
       }
     } catch (error) {
       console.error('Error handling response:', error);
-      showStatus('Error during state fixing', 'error');
+      showStatus('Error during state validation', 'error');
     }
   });
 
-  // Validate states
-  document
-    .getElementById('validateStates')
-    .addEventListener('click', async () => {
-      try {
-        showStatus('Validating states...', 'info');
-        const response = await chrome.runtime.sendMessage({
-          action: 'validateStates',
-        });
-        if (response && response.success) {
-          showStatus(response.message, 'success');
-          await loadSavedStates(); // Refresh the states list
-        } else {
-          showStatus('Failed to validate states', 'error');
-        }
-      } catch (error) {
-        console.error('Error handling response:', error);
-        showStatus('Error during state validation', 'error');
-      }
-    });
-
-  // Debug states
-  document.getElementById('debugStates').addEventListener('click', async () => {
+  // Check storage
+  document.getElementById('checkStorage').addEventListener('click', async () => {
     try {
-      showStatus('Debugging states...', 'info');
+      showStatus('Checking storage...', 'info');
       const response = await chrome.runtime.sendMessage({
-        action: 'debugStates',
+        action: 'checkStorage',
       });
       if (response && response.success) {
         showStatus(response.message, 'success');
-        console.log('Debug output:', response.data);
+        console.log('Storage contents:', response.data);
       } else {
-        showStatus('Failed to debug states', 'error');
+        showStatus('Failed to check storage', 'error');
       }
     } catch (error) {
       console.error('Error handling response:', error);
-      showStatus('Error during state debugging', 'error');
+      showStatus('Error during storage check', 'error');
+    }
+  });
+
+  // Recover orphaned states
+  document.getElementById('recoverOrphaned').addEventListener('click', async () => {
+    try {
+      showStatus('Recovering orphaned states...', 'info');
+      const response = await chrome.runtime.sendMessage({
+        action: 'recoverOrphaned',
+      });
+      if (response && response.success) {
+        showStatus(response.message, 'success');
+        await loadSavedStates(); // Refresh the states list
+      } else {
+        showStatus('Failed to recover orphaned states', 'error');
+      }
+    } catch (error) {
+      console.error('Error handling response:', error);
+      showStatus('Error during orphaned state recovery', 'error');
     }
   });
 
   // Reset to setup
-  document
-    .getElementById('resetToSetup')
-    .addEventListener('click', async () => {
-      if (
-        confirm(
-          'This will clear all states and reset to first-time setup. Are you sure?'
-        )
-      ) {
-        try {
-          showStatus('Resetting to setup...', 'info');
+  document.getElementById('resetToSetup').addEventListener('click', async () => {
+    if (
+      confirm(
+        'This will clear all states and reset to first-time setup. Are you sure?'
+      )
+    ) {
+      try {
+        showStatus('Resetting to setup...', 'info');
 
-          // Clear all states from storage
-          await chrome.storage.sync.remove([
-            'bookmarkStates',
-            'currentStateName',
-          ]);
+        // Clear all states from storage
+        await chrome.storage.sync.remove([
+          'bookmarkStates',
+          'currentStateName',
+        ]);
 
-          // Show setup screen
-          firstTimeSetup.style.display = 'block';
-          mainInterface.style.display = 'none';
+        // Show setup screen
+        firstTimeSetup.style.display = 'block';
+        mainInterface.style.display = 'none';
 
-          // Clear the first state name input
-          firstStateNameInput.value = '';
+        // Clear the first state name input
+        firstStateNameInput.value = '';
 
-          showStatus('Reset to setup complete', 'success');
-        } catch (error) {
-          console.error('Error during reset:', error);
-          showStatus('Error during reset', 'error');
-        }
+        showStatus('Reset to setup complete', 'success');
+      } catch (error) {
+        console.error('Error during reset:', error);
+        showStatus('Error during reset', 'error');
       }
-    });
+    }
+  });
 
   // Handle export options
   includeBookmarksCheckbox.addEventListener('change', function () {

@@ -112,3 +112,65 @@ describe('Mock Environment', () => {
     expect(typeof Blob).toBe('function');
   });
 });
+
+describe('Keyboard Shortcuts', () => {
+  it('should handle switch-to-next-state command', () => {
+    // Mock the necessary chrome.runtime.onMessage listener
+    const mockListener = jest.fn();
+    chrome.runtime.onMessage.addListener(mockListener);
+
+    // Simulate a message from the extension
+    const message = { action: 'switch-to-next-state' };
+    mockListener(message, {}, () => {});
+
+    expect(mockListener).toHaveBeenCalledWith(message, {}, expect.any(Function));
+  });
+
+  it('should handle switch-to-previous-state command', () => {
+    // Mock the necessary chrome.runtime.onMessage listener
+    const mockListener = jest.fn();
+    chrome.runtime.onMessage.addListener(mockListener);
+
+    // Simulate a message from the extension
+    const message = { action: 'switch-to-previous-state' };
+    mockListener(message, {}, () => {});
+
+    expect(mockListener).toHaveBeenCalledWith(message, {}, expect.any(Function));
+  });
+
+  it('should handle quick-save-current-state command', () => {
+    // Mock the necessary chrome.runtime.onMessage listener
+    const mockListener = jest.fn();
+    chrome.runtime.onMessage.addListener(mockListener);
+
+    // Simulate a message from the extension
+    const message = { action: 'quick-save-current-state' };
+    mockListener(message, {}, () => {});
+
+    expect(mockListener).toHaveBeenCalledWith(message, {}, expect.any(Function));
+  });
+
+  it('should handle show-popup command', () => {
+    // Mock the necessary chrome.runtime.onMessage listener
+    const mockListener = jest.fn();
+    chrome.runtime.onMessage.addListener(mockListener);
+
+    // Simulate a message from the extension
+    const message = { action: 'show-popup' };
+    mockListener(message, {}, () => {});
+
+    expect(mockListener).toHaveBeenCalledWith(message, {}, expect.any(Function));
+  });
+
+  it('should handle unknown command gracefully', () => {
+    // Mock the necessary chrome.runtime.onMessage listener
+    const mockListener = jest.fn();
+    chrome.runtime.onMessage.addListener(mockListener);
+
+    // Simulate a message from the extension
+    const message = { action: 'unknown-command' };
+    mockListener(message, {}, () => {});
+
+    expect(mockListener).toHaveBeenCalledWith(message, {}, expect.any(Function));
+  });
+});

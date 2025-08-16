@@ -88,33 +88,41 @@ h3 {
   margin-bottom: 15px;
 }
 
+/* Current State Styles */
 .current-state {
   margin-bottom: 20px;
 }
 
-.current-state label {
-  display: block;
-  font-size: 12px;
-  color: #5f6368;
-  margin-bottom: 5px;
-  font-weight: 500;
+.current-state h3 {
+  margin-bottom: 15px;
 }
 
-.current-state input {
-  width: 100%;
+.state-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.state-input-group input {
+  flex: 1;
   padding: 8px 12px;
   border: 1px solid #dadce0;
   border-radius: 4px;
   font-size: 14px;
-  margin-bottom: 10px;
 }
 
-.current-state input:focus {
+.state-input-group input:focus {
   outline: none;
   border-color: #1a73e8;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
 
+.state-input-group button {
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+/* Settings Styles */
 .settings {
   margin-bottom: 20px;
 }
@@ -188,6 +196,7 @@ h3 {
   font-weight: 500;
 }
 
+/* Button Styles */
 button {
   background: #1a73e8;
   color: white;
@@ -231,16 +240,29 @@ button.danger:hover {
   background: #d93025;
 }
 
+/* Divider */
 .divider {
   height: 1px;
   background: #dadce0;
   margin: 20px 0;
 }
 
+/* Saved States Styles */
 .saved-states {
   margin-bottom: 20px;
 }
 
+.state-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.state-actions button {
+  flex: 1;
+}
+
+/* State Items */
 .state-item {
   display: flex;
   align-items: center;
@@ -273,16 +295,7 @@ button.danger:hover {
   font-size: 12px;
 }
 
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.actions button {
-  flex: 1;
-}
-
+/* Status */
 .status {
   padding: 10px;
   border-radius: 4px;
@@ -309,6 +322,7 @@ button.danger:hover {
   border: 1px solid #1a73e8;
 }
 
+/* Empty State */
 .empty-state {
   text-align: center;
   color: #5f6368;
@@ -316,14 +330,7 @@ button.danger:hover {
   padding: 20px;
 }
 
-.auto-save-info {
-  font-size: 11px;
-  color: #9aa0a6;
-  text-align: center;
-  margin-top: 10px;
-  font-style: italic;
-}
-
+/* Data Management */
 .data-management {
   margin-bottom: 20px;
 }
@@ -351,6 +358,7 @@ button.danger:hover {
   }
 }
 
+/* Export Options */
 .export-options {
   margin-bottom: 15px;
   padding: 15px;
@@ -399,6 +407,7 @@ button.danger:hover {
   background: white;
 }
 
+/* Sync Status */
 .sync-status {
   display: flex;
   align-items: center;
@@ -426,6 +435,48 @@ button.danger:hover {
   color: #ea4335;
 }
 
+/* Debug Mode Styles */
+.debug-mode {
+  margin-bottom: 20px;
+}
+
+.debug-toggle {
+  margin-bottom: 15px;
+}
+
+.debug-options {
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.debug-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.debug-actions button {
+  flex: 1 1 calc(50% - 4px);
+  min-width: 120px;
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+.debug-info {
+  text-align: center;
+  color: #9aa0a6;
+  font-style: italic;
+}
+
+.debug-info small {
+  font-size: 11px;
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -433,4 +484,59 @@ button.danger:hover {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Keyboard Shortcuts Styles */
+.keyboard-shortcuts {
+  margin-bottom: 20px;
+}
+
+.shortcut-list {
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.shortcut-item:last-child {
+  border-bottom: none;
+}
+
+.shortcut-key {
+  background: #e8eaed;
+  color: #5f6368;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 80px;
+  text-align: center;
+}
+
+.shortcut-description {
+  font-size: 12px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.shortcut-note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e8eaed;
+  text-align: center;
+}
+
+.shortcut-note small {
+  color: #9aa0a6;
+  font-size: 11px;
+  font-style: italic;
 }

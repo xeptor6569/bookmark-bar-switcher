@@ -3,7 +3,7 @@
   "name": "Bookmarks Bar Switcher",
   "version": "0.0.1",
   "description": "Switch between different bookmark bar states (Personal, Work, Development, etc.) with automatic saving",
-  "permissions": ["bookmarks", "storage", "alarms"],
+  "permissions": ["bookmarks", "storage", "alarms", "notifications"],
   "host_permissions": [],
   "action": {
     "default_popup": "popup.html",
@@ -12,9 +12,42 @@
   "background": {
     "service_worker": "background.js"
   },
+  "commands": {
+    "switch-to-next-state": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Right",
+        "mac": "Command+Shift+Right"
+      },
+      "description": "Switch to next bookmark bar state"
+    },
+    "switch-to-previous-state": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Left",
+        "mac": "Command+Shift+Left"
+      },
+      "description": "Switch to previous bookmark bar state"
+    },
+    "quick-save-current-state": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Quick save current bookmark bar state"
+    },
+    "show-popup": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+B",
+        "mac": "Command+Shift+B"
+      },
+      "description": "Show Bookmarks Bar Switcher popup"
+    }
+  },
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icons/bbs3_16.png",
+    "24": "icons/bbs3_24.png",
+    "32": "icons/bbs3_32.png",
+    "48": "icons/bbs3_48.png",
+    "64": "icons/bbs3_64.png",
+    "128":"icons/bbs3_128.png"
   }
 }

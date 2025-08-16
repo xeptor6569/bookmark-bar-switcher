@@ -11,6 +11,27 @@ A professional Chrome extension for switching between different bookmark bar sta
 - **Smart Recovery**: Automatic state recovery and corruption detection
 - **First-Time Setup**: User-friendly onboarding experience
 
+## ⌨️ Keyboard Shortcuts
+
+The extension provides convenient keyboard shortcuts for quick access to common actions:
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Ctrl+B →` | Next State | Switch to the next bookmark bar state |
+| `Ctrl+B ←` | Previous State | Switch to the previous bookmark bar state |
+| `Ctrl+B ↑` | Quick Save | Quickly save the current bookmark bar state |
+| `Ctrl+B` | Show Popup | Open the Bookmarks Bar Switcher popup |
+
+**Note**: On macOS, use `Cmd` instead of `Ctrl`.
+
+### Using Keyboard Shortcuts
+
+1. **Navigate States**: Use `Ctrl+B →` and `Ctrl+B ←` to cycle through your saved states
+2. **Quick Save**: Press `Ctrl+B ↑` to instantly save your current bookmarks bar
+3. **Access Popup**: Use `Ctrl+B` to quickly open the extension popup
+
+Keyboard shortcuts work globally across all tabs and provide desktop notifications for feedback.
+
 ## 🏗️ Project Structure
 
 ```

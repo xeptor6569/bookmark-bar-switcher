@@ -1417,3 +1417,149 @@ async function scanAndRecoverOrphanedStates() {
     throw new Error('Failed to scan and recover orphaned states');
   }
 }
+
+// Handle keyboard shortcuts
+chrome.commands.onCommand.addListener(async (command) => {
+  try {
+    console.log(`Keyboard shortcut triggered: ${command}`);
+    
+    switch (command) {
+      case 'switch-to-next-state':
+        await switchToNextState();
+        break;
+      case 'switch-to-previous-state':
+        await switchToPreviousState();
+        break;
+      case 'quick-save-current-state':
+        await quickSaveCurrentState();
+        break;
+      case 'show-popup':
+        // This will be handled by the browser automatically
+        console.log('Show popup command triggered');
+        break;
+      default:
+        console.warn(`Unknown command: ${command}`);
+    }
+  } catch (error) {
+    console.error(`Error handling command ${command}:`, error);
+  }
+});
+
+// Switch to next state in the list
+async function switchToNextState() {
+  try {
+    const states = await getStoredStates();
+    if (states.length === 0) {
+      console.log('No states available for switching');
+      await showNotification('No states available for switching', 'warning');
+      return;
+    }
+
+    const currentStateName = await getCurrentStateName();
+    let nextStateIndex = 0;
+
+    if (currentStateName) {
+      const currentIndex = states.findIndex(s => s.name === currentStateName);
+      if (currentIndex >= 0) {
+        nextStateIndex = (currentIndex + 1) % states.length;
+      }
+    }
+
+    const nextState = states[nextStateIndex];
+    console.log(`Switching to next state: ${nextState.name}`);
+    
+    await switchToState(nextState.name);
+    
+    // Show notification
+    await showNotification(`Switched to "${nextState.name}" state`);
+    
+  } catch (error) {
+    console.error('Error switching to next state:', error);
+    await showNotification('Failed to switch to next state', 'error');
+  }
+}
+
+// Switch to previous state in the list
+async function switchToPreviousState() {
+  try {
+    const states = await getStoredStates();
+    if (states.length === 0) {
+      console.log('No states available for switching');
+      await showNotification('No states available for switching', 'warning');
+      return;
+    }
+
+    const currentStateName = await getCurrentStateName();
+    let prevStateIndex = 0;
+
+    if (currentStateName) {
+      const currentIndex = states.findIndex(s => s.name === currentStateName);
+      if (currentIndex >= 0) {
+        prevStateIndex = currentIndex === 0 ? states.length - 1 : currentIndex - 1;
+      }
+    }
+
+    const prevState = states[prevStateIndex];
+    console.log(`Switching to previous state: ${prevState.name}`);
+    
+    await switchToState(prevState.name);
+    
+    // Show notification
+    await showNotification(`Switched to "${prevState.name}" state`);
+    
+  } catch (error) {
+    console.error('Error switching to previous state:', error);
+    await showNotification('Failed to switch to previous state', 'error');
+  }
+}
+
+// Quick save current state with current name
+async function quickSaveCurrentState() {
+  try {
+    const currentStateName = await getCurrentStateName();
+    if (!currentStateName) {
+      console.log('No current state name set, cannot quick save');
+      await showNotification('Please set a state name first', 'warning');
+      return;
+    }
+
+    console.log(`Quick saving current state: ${currentStateName}`);
+    
+    await saveCurrentState(currentStateName);
+    
+    // Show notification
+    await showNotification(`Quick saved "${currentStateName}" state`);
+    
+  } catch (error) {
+    console.error('Error quick saving current state:', error);
+    await showNotification('Failed to quick save state', 'error');
+  }
+}
+
+// Show notification to user
+async function showNotification(message, type = 'info') {
+  try {
+    // Try to use chrome.notifications if available
+    if (chrome.notifications) {
+      const notificationId = `bookmark-switcher-${Date.now()}`;
+      
+      await chrome.notifications.create(notificationId, {
+        type: 'basic',
+        iconUrl: 'icons/bbs3_48.png',
+        title: 'Bookmarks Bar Switcher',
+        message: message,
+        priority: type === 'error' ? 2 : type === 'warning' ? 1 : 0
+      });
+      
+      // Auto-remove notification after 3 seconds
+      setTimeout(() => {
+        chrome.notifications.clear(notificationId);
+      }, 3000);
+    } else {
+      // Fallback to console logging
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+  } catch (error) {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+  }
+}
