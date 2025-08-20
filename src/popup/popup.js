@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const statesList = document.getElementById('statesList');
   const status = document.getElementById('status');
   const autoSaveToggle = document.getElementById('autoSaveToggle');
-  const autoSaveInterval = document.getElementById('autoSaveInterval');
+  const autoSaveInterval = document.getElementById('autoSaveInterval'); // May not exist in current UI
   const popOutBtn = document.getElementById('popOutBtn');
   const exportStatesBtn = document.getElementById('exportStates');
   const performExportBtn = document.getElementById('performExport');
@@ -26,10 +26,62 @@ document.addEventListener('DOMContentLoaded', function () {
   const includeBookmarksCheckbox = document.getElementById('includeBookmarks');
   const privacyOptions = document.getElementById('privacyOptions');
   const privacyLevelSelect = document.getElementById('privacyLevel');
+  const defaultStateSelect = document.getElementById('defaultStateSelect');
 
   // Pop out button handler
   popOutBtn.addEventListener('click', function() {
     popOutExtension();
+  });
+
+  // Dark mode toggle handler
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener('change', function() {
+      const isDarkMode = darkModeToggle.checked;
+      if (isDarkMode) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      
+      // Save preference to storage
+      chrome.storage.sync.set({ darkMode: isDarkMode });
+      
+      showStatus(isDarkMode ? 'Dark mode enabled' : 'Light mode enabled', 'info');
+    });
+  }
+
+  // Setup dark mode toggle handler
+  const setupDarkModeToggle = document.getElementById('setupDarkModeToggle');
+  if (setupDarkModeToggle) {
+    setupDarkModeToggle.addEventListener('change', function() {
+      const isDarkMode = setupDarkModeToggle.checked;
+      if (isDarkMode) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      
+      // Save preference to storage
+      chrome.storage.sync.set({ darkMode: isDarkMode });
+      
+      // Update main toggle if it exists
+      if (darkModeToggle) {
+        darkModeToggle.checked = isDarkMode;
+      }
+    });
+  }
+
+  // Load dark mode preference
+  chrome.storage.sync.get(['darkMode'], function(result) {
+    if (result.darkMode) {
+      if (darkModeToggle) darkModeToggle.checked = true;
+      if (setupDarkModeToggle) setupDarkModeToggle.checked = true;
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      // Explicitly set light theme or remove the attribute to use default styles
+      document.documentElement.removeAttribute('data-theme');
+    }
   });
 
   // Pop out extension to new window
@@ -53,11 +105,11 @@ document.addEventListener('DOMContentLoaded', function () {
         window.currentStateName = result.currentStateName;
       }
 
-      if (result.autoSaveEnabled !== undefined) {
+      if (result.autoSaveEnabled !== undefined && autoSaveToggle) {
         autoSaveToggle.checked = result.autoSaveEnabled;
       }
 
-      if (result.autoSaveIntervalMinutes) {
+      if (result.autoSaveIntervalMinutes && autoSaveInterval) {
         autoSaveInterval.value = result.autoSaveIntervalMinutes;
       }
     }
@@ -125,10 +177,11 @@ document.addEventListener('DOMContentLoaded', function () {
     loadSavedStates();
   });
 
-  // Auto-save toggle handler
-  autoSaveToggle.addEventListener('change', function () {
+  // Auto-save toggle handler (if element exists)
+  if (autoSaveToggle) {
+    autoSaveToggle.addEventListener('change', function () {
     const enabled = this.checked;
-    const interval = parseInt(autoSaveInterval.value);
+    const interval = autoSaveInterval ? parseInt(autoSaveInterval.value) : 5;
 
     chrome.storage.sync.set(
       {
@@ -156,9 +209,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     );
   });
+  }
 
   // Auto-save interval handler
-  autoSaveInterval.addEventListener('change', function () {
+  // Auto-save interval handler (if element exists)
+  if (autoSaveInterval) {
+    autoSaveInterval.addEventListener('change', function () {
     const interval = parseInt(this.value);
     const enabled = autoSaveToggle.checked;
 
@@ -189,6 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
       checkSyncStatus();
     });
   });
+  }
 
   // Save current state
   saveCurrentStateBtn.addEventListener('click', function () {
@@ -380,39 +437,49 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 3000);
   }
 
-  // Export states
-  exportStatesBtn.addEventListener('click', () => {
-    exportOptions.style.display = 'block';
-    performExportBtn.style.display = 'block';
-  });
+  // Export states (if element exists)
+  if (exportStatesBtn) {
+    exportStatesBtn.addEventListener('click', () => {
+      if (exportOptions) exportOptions.style.display = 'block';
+      if (performExportBtn) performExportBtn.style.display = 'block';
+    });
+  }
 
-  // Perform export
-  performExportBtn.addEventListener('click', performExport);
+  // Perform export (if element exists)
+  if (performExportBtn) {
+    performExportBtn.addEventListener('click', performExport);
+  }
 
-  // Cleanup states
-  cleanupStatesBtn.addEventListener('click', cleanupStates);
+  // Cleanup states (if element exists)
+  if (cleanupStatesBtn) {
+    cleanupStatesBtn.addEventListener('click', cleanupStates);
+  }
 
   // Debug mode toggle
   const debugModeToggle = document.getElementById('debugModeToggle');
   const debugOptions = document.getElementById('debugOptions');
 
-  debugModeToggle.addEventListener('change', function() {
-    debugOptions.style.display = this.checked ? 'block' : 'none';
-    
-    // Save debug mode preference
-    chrome.storage.sync.set({ debugModeEnabled: this.checked });
-  });
+  if (debugModeToggle && debugOptions) {
+    debugModeToggle.addEventListener('change', function() {
+      debugOptions.style.display = this.checked ? 'block' : 'none';
+      
+      // Save debug mode preference
+      chrome.storage.sync.set({ debugModeEnabled: this.checked });
+    });
+  }
 
   // Load debug mode preference
   chrome.storage.sync.get(['debugModeEnabled'], function(result) {
-    if (result.debugModeEnabled) {
+    if (result.debugModeEnabled && debugModeToggle && debugOptions) {
       debugModeToggle.checked = true;
       debugOptions.style.display = 'block';
     }
   });
 
-  // Validate states
-  document.getElementById('validateStates').addEventListener('click', async () => {
+  // Validate states (if element exists)
+  const validateStatesBtn = document.getElementById('validateStates');
+  if (validateStatesBtn) {
+    validateStatesBtn.addEventListener('click', async () => {
     try {
       showStatus('Validating states...', 'info');
       const response = await chrome.runtime.sendMessage({
@@ -429,9 +496,12 @@ document.addEventListener('DOMContentLoaded', function () {
       showStatus('Error during state validation', 'error');
     }
   });
+  }
 
-  // Check storage
-  document.getElementById('checkStorage').addEventListener('click', async () => {
+  // Check storage (if element exists)
+  const checkStorageBtn = document.getElementById('checkStorage');
+  if (checkStorageBtn) {
+    checkStorageBtn.addEventListener('click', async () => {
     try {
       showStatus('Checking storage...', 'info');
       const response = await chrome.runtime.sendMessage({
@@ -448,9 +518,12 @@ document.addEventListener('DOMContentLoaded', function () {
       showStatus('Error during storage check', 'error');
     }
   });
+  }
 
-  // Recover orphaned states
-  document.getElementById('recoverOrphaned').addEventListener('click', async () => {
+  // Recover orphaned states (if element exists)
+  const recoverOrphanedBtn = document.getElementById('recoverOrphaned');
+  if (recoverOrphanedBtn) {
+    recoverOrphanedBtn.addEventListener('click', async () => {
     try {
       showStatus('Recovering orphaned states...', 'info');
       const response = await chrome.runtime.sendMessage({
@@ -467,9 +540,12 @@ document.addEventListener('DOMContentLoaded', function () {
       showStatus('Error during orphaned state recovery', 'error');
     }
   });
+  }
 
-  // Reset to setup
-  document.getElementById('resetToSetup').addEventListener('click', async () => {
+  // Reset to setup (if element exists)
+  const resetToSetupBtn = document.getElementById('resetToSetup');
+  if (resetToSetupBtn) {
+    resetToSetupBtn.addEventListener('click', async () => {
     if (
       confirm(
         'This will clear all states and reset to first-time setup. Are you sure?'
@@ -498,40 +574,47 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
   });
+  }
 
-  // Handle export options
-  includeBookmarksCheckbox.addEventListener('change', function () {
-    privacyOptions.style.display = this.checked ? 'block' : 'none';
+  // Handle export options (if elements exist)
+  if (includeBookmarksCheckbox && privacyOptions && privacyLevelSelect && performExportBtn) {
+    includeBookmarksCheckbox.addEventListener('change', function () {
+      privacyOptions.style.display = this.checked ? 'block' : 'none';
 
-    // Update export button text
-    if (this.checked) {
-      const privacyLevel = privacyLevelSelect.value;
+      // Update export button text
+      if (this.checked) {
+        const privacyLevel = privacyLevelSelect.value;
+        const privacyText =
+          privacyLevel === 'hidden'
+            ? '🔒'
+            : privacyLevel === 'domain'
+            ? '🌐'
+            : '📖';
+        performExportBtn.textContent = `Export with Bookmarks ${privacyText}`;
+      } else {
+        performExportBtn.textContent = 'Export States Only';
+      }
+    });
+  }
+
+  // Handle privacy level change (if elements exist)
+  if (privacyLevelSelect && exportStatesBtn) {
+    privacyLevelSelect.addEventListener('change', function () {
+      // Update the export button text based on privacy level
       const privacyText =
-        privacyLevel === 'hidden'
-          ? '🔒'
-          : privacyLevel === 'domain'
-          ? '🌐'
-          : '📖';
-      performExportBtn.textContent = `Export with Bookmarks ${privacyText}`;
-    } else {
-      performExportBtn.textContent = 'Export States Only';
-    }
-  });
+        this.value === 'hidden' ? '🔒' : this.value === 'domain' ? '🌐' : '📖';
+      exportStatesBtn.textContent = `Export States ${privacyText}`;
+    });
+  }
 
-  // Handle privacy level change
-  privacyLevelSelect.addEventListener('change', function () {
-    // Update the export button text based on privacy level
-    const privacyText =
-      this.value === 'hidden' ? '🔒' : this.value === 'domain' ? '🌐' : '📖';
-    exportStatesBtn.textContent = `Export States ${privacyText}`;
-  });
+  // Import states (if elements exist)
+  if (importStatesBtn && importFileInput) {
+    importStatesBtn.addEventListener('click', () => {
+      importFileInput.click();
+    });
 
-  // Import states
-  importStatesBtn.addEventListener('click', () => {
-    importFileInput.click();
-  });
-
-  importFileInput.addEventListener('change', handleImportFile);
+    importFileInput.addEventListener('change', handleImportFile);
+  }
 
   // Check sync storage status
   function checkSyncStatus() {

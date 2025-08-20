@@ -1,25 +1,29 @@
+/* Reset and base styles */
 * {
-  margin: 1px;
+  margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
 body {
-  width: 450px;
+  width: 400px;
   min-height: 500px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, sans-serif;
-  background: #f8f9fa;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #ffffff;
+  color: #202124;
+  overflow-x: hidden;
 }
 
-/* Header styles */
+/* Header */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 15px 20px;
-  border-bottom: 1px solid #e8eaed;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e8eaed 100%);
+  border-bottom: 1px solid #dadce0;
+  background-color: #f8f9fa;
 }
 
 .header h1 {
@@ -43,7 +47,6 @@ body {
   padding: 8px 10px;
   font-size: 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
   min-width: 36px;
   height: 36px;
   display: flex;
@@ -53,11 +56,6 @@ body {
 
 .save-btn:hover {
   background: #2d8f47;
-  transform: scale(1.05);
-}
-
-.save-btn:active {
-  transform: scale(0.95);
 }
 
 .pop-out-btn {
@@ -68,7 +66,6 @@ body {
   padding: 8px 12px;
   font-size: 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
   min-width: 40px;
   height: 36px;
   display: flex;
@@ -78,64 +75,51 @@ body {
 
 .pop-out-btn:hover {
   background: #1557b0;
-  transform: scale(1.05);
 }
 
-.pop-out-btn:active {
-  transform: scale(0.95);
-}
-
-/* Container adjustment for header */
+/* Container */
 .container {
-  padding: 0;
+  padding: 20px;
+  background-color: #ffffff;
 }
 
-/* First-time setup styles */
+/* First-time setup */
 .setup-screen {
   text-align: center;
-  padding: 20px 0;
 }
 
 .welcome-message h2 {
-  color: #1a73e8;
+  color: #202124;
   margin-bottom: 15px;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .welcome-message p {
   color: #5f6368;
   margin-bottom: 10px;
-  line-height: 1.4;
-  font-size: 13px;
+  line-height: 1.5;
 }
 
 .setup-form {
-  margin-top: 25px;
-  text-align: left;
+  max-width: 300px;
+  margin: 20px auto;
 }
 
 .setup-form label {
   display: block;
-  font-size: 12px;
-  color: #5f6368;
-  margin-bottom: 8px;
+  color: #202124;
   font-weight: 500;
+  margin-bottom: 8px;
+  text-align: left;
 }
 
-.setup-form input {
+.setup-form input[type="text"] {
   width: 100%;
-  padding: 10px 12px;
-  border: 2px solid #dadce0;
+  padding: 12px;
+  border: 1px solid #dadce0;
   border-radius: 6px;
   font-size: 14px;
   margin-bottom: 20px;
-  transition: border-color 0.2s;
-}
-
-.setup-form input:focus {
-  outline: none;
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
 }
 
 .setup-actions {
@@ -145,31 +129,328 @@ body {
 }
 
 .setup-actions button {
-  flex: 1;
-  max-width: 150px;
-}
-
-h1 {
-  font-size: 18px;
-  color: #1a73e8;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-h3 {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
   font-size: 14px;
-  color: #5f6368;
-  margin-bottom: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 120px;
 }
 
-/* Settings Section */
-.settings {
+.setup-actions button.primary {
+  background: #1a73e8;
+  color: white;
+}
+
+.setup-actions button.secondary {
+  background: #f8f9fa;
+  color: #202124;
+  border: 1px solid #dadce0;
+}
+
+/* Saved states */
+.saved-states {
   margin-bottom: 20px;
-  background: white;
-  border: 1px solid #e8eaed;
+  background: #ffffff;
+  border: 1px solid #dadce0;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.saved-states h3 {
+  margin-bottom: 15px;
+  color: #202124;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* State items */
+.state-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.state-item:hover {
+  background: #f1f3f4;
+  border-color: #dadce0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.state-item.active-state {
+  border-left: 4px solid #1a73e8;
+  background: #e8f0fe;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.state-item.active-state::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #1a73e8;
+  border-radius: 2px 0 0 2px;
+}
+
+.state-name {
+  font-weight: 500;
+  color: #202124;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.state-info {
+  color: #5f6368;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.active-indicator {
+  background: #34a853;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.state-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.state-actions button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.state-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.state-actions button.primary {
+  background: #1a73e8;
+  color: white;
+}
+
+.state-actions button.primary:hover {
+  background: #1557b0;
+}
+
+.state-actions button.secondary {
+  background: #f8f9fa;
+  color: #202124;
+  border: 1px solid #dadce0;
+}
+
+.state-actions button.secondary:hover {
+  background: #e8eaed;
+  border-color: #5f6368;
+}
+
+/* State item buttons */
+.state-item-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.state-item-actions button {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.switch-btn {
+  background: #1a73e8;
+  color: white;
+}
+
+.switch-btn:hover {
+  background: #1557b0;
+}
+
+.rename-btn {
+  background: #fbbc04;
+  color: #202124;
+}
+
+.rename-btn:hover {
+  background: #f9a825;
+}
+
+.delete-btn {
+  background: #ea4335;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #d93025;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9aa0a6;
+}
+
+.empty-state h3 {
+  margin-bottom: 10px;
+  color: #5f6368;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.empty-state p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* State editing interface */
+.edit-state-interface {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #e8f0fe;
+  border: 2px solid #1a73e8;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.edit-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #1a73e8;
+  font-size: 14px;
+}
+
+.edit-label {
+  font-size: 13px;
+  color: #5f6368;
+  margin-bottom: 4px;
+}
+
+.edit-input-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-input-container input {
+  padding: 8px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+}
+
+.edit-input-container input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.edit-input-container .error {
+  border-color: #ea4335;
+  box-shadow: 0 0 0 2px rgba(234, 67, 53, 0.2);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-rename-btn {
+  background: #34a853;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-rename-btn:hover {
+  background: #2d8f47;
+}
+
+.save-rename-btn:disabled {
+  background: #dadce0;
+  color: #9aa0a6;
+  cursor: not-allowed;
+}
+
+.cancel-rename-btn {
+  background: #f8f9fa;
+  color: #5f6368;
+  border: 1px solid #dadce0;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-rename-btn:hover {
+  background: #e8eaed;
+  border-color: #5f6368;
+}
+
+/* Rename input (for inline editing) */
+.rename-input {
+  background: white;
+  border: 2px solid #1a73e8;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #202124;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.rename-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* Settings */
+.settings {
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 20px;
 }
 
 .settings h3 {
@@ -190,576 +471,75 @@ h3 {
   margin-bottom: 0;
 }
 
-.setting-item label {
-  color: #5f6368;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.setting-item select {
-  padding: 6px 12px;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #202124;
-  background: white;
-  cursor: pointer;
-}
-
-.setting-item select:focus {
-  outline: none;
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
-}
-
-/* Toggle Switch Styles */
 .toggle-label {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   cursor: pointer;
-  user-select: none;
-}
-
-.toggle-slider {
+  width: 100%;
   position: relative;
-  width: 44px;
-  height: 24px;
-  background: #dadce0;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.toggle-slider::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  background: white;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.toggle-label input:checked + .toggle-slider {
-  background: #34a853;
-}
-
-.toggle-label input:checked + .toggle-slider::before {
-  transform: translateX(20px);
-}
-
-.toggle-label input {
-  display: none;
 }
 
 .toggle-text {
-  color: #5f6368;
+  color: #202124;
   font-size: 14px;
   font-weight: 500;
 }
 
-/* Button Styles */
-button {
-  background: #1a73e8;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-  background: #1557b0;
-}
-
-button:active {
-  background: #174ea6;
-}
-
-button.primary {
-  background: #34a853;
-}
-
-button.primary:hover {
-  background: #2d8745;
-}
-
-button.secondary {
-  background: #5f6368;
-}
-
-button.secondary:hover {
-  background: #494c50;
-}
-
-button.danger {
-  background: #ea4335;
-}
-
-button.danger:hover {
-  background: #d93025;
-}
-
-/* Divider Styles */
-.divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #e8eaed, transparent);
-  margin: 20px 0;
-}
-
-/* Saved States Section */
-.saved-states {
-  margin-bottom: 20px;
-}
-
-.saved-states h3 {
-  margin-bottom: 15px;
-}
-
-.state-item {
-  background: white;
-  border: 1px solid #e8eaed;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+.toggle-switch {
   position: relative;
+  width: 50px;
+  height: 24px;
   overflow: hidden;
+  box-sizing: content-box;
 }
 
-.state-item:hover {
-  border-color: #dadce0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
 
-.state-item.active-state {
-  border-color: #34a853;
-  background: linear-gradient(135deg, #f8fff9 0%, #e6f4ea 100%);
-  box-shadow: 0 2px 12px rgba(52, 168, 83, 0.25);
-}
-
-.state-item.active-state::before {
-  content: '';
+.toggle-slider {
   position: absolute;
-  left: 0;
+  cursor: pointer;
   top: 0;
-  bottom: 0;
-  width: 4px;
-  background: #34a853;
+  left: 0;
+  width: 50px;
+  height: 24px;
+  background-color: #dadce0;
+  transition: 0.3s;
+  border-radius: 24px;
+  box-sizing: content-box;
 }
 
-.state-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
 }
 
-.state-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #202124;
-  flex: 1;
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #1a73e8;
 }
 
-.state-name.active {
-  color: #34a853;
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(26px);
 }
 
-.active-indicator {
-  background: #34a853;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-left: 8px;
-}
-
-.state-meta {
-  margin-bottom: 12px;
-}
-
-.state-date {
-  color: #5f6368;
-  font-size: 13px;
-}
-
-.state-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.state-actions button {
-  padding: 6px 12px;
-  font-size: 13px;
-  border-radius: 6px;
-  border: 1px solid #dadce0;
-  background: white;
-  color: #5f6368;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 80px;
-}
-
-.state-actions button:hover {
-  background: #f8f9fa;
-  border-color: #1a73e8;
-  color: #1a73e8;
-}
-
-.state-actions button.primary {
-  background: #1a73e8;
-  color: white;
-  border-color: #1a73e8;
-}
-
-.state-actions button.primary:hover {
-  background: #1557b0;
-  border-color: #1557b0;
-}
-
-.state-actions button.danger {
-  background: #ea4335;
-  color: white;
-  border-color: #ea4335;
-}
-
-.state-actions button.danger:hover {
-  background: #d93025;
-  border-color: #d93025;
-}
-
-.rename-btn {
-  background: #f8f9fa !important;
-  color: #5f6368 !important;
-  border-color: #dadce0 !important;
-  padding: 6px 8px !important;
-  min-width: 36px !important;
-  font-size: 14px !important;
-}
-
-.rename-btn:hover {
-  background: #e8eaed !important;
-  color: #202124 !important;
-}
-
-.rename-input {
-  background: white;
-  border: 2px solid #1a73e8;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #202124;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
-  min-width: 120px;
-}
-
-.rename-input:focus {
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
-}
-
-/* Status Message Styles */
-.status {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 12px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  animation: slideUp 0.3s ease;
-}
-
-.status.success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.status.error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.status.info {
-  background: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateX(-50%) translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Empty State Styles */
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: #9aa0a6;
-  font-size: 14px;
-  font-style: italic;
-}
-
-/* Data Management Section */
-.data-management {
-  margin-bottom: 20px;
-  background: white;
-  border: 1px solid #e8eaed;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.data-management h3 {
-  margin-bottom: 15px;
-  color: #202124;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.data-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.data-actions button {
-  padding: 8px 16px;
-  border: 1px solid #dadce0;
-  border-radius: 6px;
-  background: white;
-  color: #5f6368;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 100px;
-}
-
-.data-actions button:hover {
-  background: #f8f9fa;
-  border-color: #1a73e8;
-  color: #1a73e8;
-}
-
-.data-actions button.primary {
-  background: #1a73e8;
-  color: white;
-  border-color: #1a73e8;
-}
-
-.data-actions button.primary:hover {
-  background: #1557b0;
-  border-color: #1557b0;
-}
-
-/* Debug Mode Section */
-.debug-mode {
-  margin-bottom: 20px;
-  background: white;
-  border: 1px solid #e8eaed;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.debug-mode h3 {
-  margin-bottom: 15px;
-  color: #202124;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.debug-toggle {
-  margin-bottom: 15px;
-}
-
-.debug-options {
-  padding-top: 15px;
-  border-top: 1px solid #e8eaed;
-}
-
-.debug-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.debug-info {
-  padding: 10px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e8eaed;
-}
-
-.debug-info small {
-  color: #5f6368;
-  font-size: 12px;
-}
-
-/* Export Options */
-.export-options {
-  margin-bottom: 15px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #dadce0;
-}
-
-.export-option {
-  margin-bottom: 10px;
-}
-
-.export-option label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #5f6368;
-  cursor: pointer;
-}
-
-.export-option input[type='checkbox'] {
-  margin: 0;
-}
-
-.privacy-options {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #dadce0;
-}
-
-.privacy-options label {
-  display: block;
-  font-size: 12px;
-  color: #5f6368;
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.privacy-options select {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 12px;
-  background: white;
-}
-
-/* Sync Status */
-.sync-status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px;
-  background: #f8f9fa;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #5f6368;
-}
-
-.sync-indicator {
-  font-size: 14px;
-  animation: spin 2s linear infinite;
-}
-
-.sync-indicator.synced {
-  animation: none;
-  color: #34a853;
-}
-
-.sync-indicator.error {
-  animation: none;
-  color: #ea4335;
-}
-
-/* Debug Mode Styles */
-.debug-mode {
-  margin-bottom: 20px;
-}
-
-.debug-toggle {
-  margin-bottom: 15px;
-}
-
-.debug-options {
-  background: #f8f9fa;
-  border: 1px solid #dadce0;
-  border-radius: 6px;
-  padding: 15px;
-  margin-top: 10px;
-}
-
-.debug-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.debug-actions button {
-  flex: 1 1 calc(50% - 4px);
-  min-width: 120px;
-  white-space: nowrap;
-  font-size: 12px;
-  padding: 8px 12px;
-}
-
-.debug-info {
-  text-align: center;
-  color: #9aa0a6;
-  font-style: italic;
-}
-
-.debug-info small {
-  font-size: 11px;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Keyboard Shortcuts Styles */
+/* Keyboard shortcuts */
 .keyboard-shortcuts {
   margin-bottom: 20px;
-  background: white;
-  border: 1px solid #e8eaed;
+  background: #ffffff;
+  border: 1px solid #dadce0;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .keyboard-shortcuts h3 {
@@ -772,132 +552,263 @@ button.danger:hover {
 .shortcut-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .shortcut-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
+  justify-content: space-between;
+  padding: 8px 12px;
   background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e8eaed;
+  border-radius: 4px;
 }
 
 .shortcut-key {
-  background: #1a73e8;
-  color: white;
+  background: #e8eaed;
+  color: #202124;
   padding: 4px 8px;
   border-radius: 4px;
+  font-family: 'Courier New', monospace;
   font-size: 12px;
   font-weight: 600;
-  font-family: 'Courier New', monospace;
-  min-width: 80px;
-  text-align: center;
 }
 
 .shortcut-description {
-  color: #5f6368;
-  font-size: 14px;
+  color: #202124;
+  font-size: 13px;
   font-weight: 500;
 }
 
-.shortcut-note {
-  margin-top: 12px;
-  padding: 10px;
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 6px;
-  text-align: center;
+/* Divider */
+.divider {
+  height: 1px;
+  background: #e8eaed;
+  margin: 20px 0;
 }
 
-.shortcut-note small {
-  color: #856404;
-  font-size: 12px;
+/* Debug mode and other sections - simplified */
+.debug-mode {
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 20px;
 }
 
-/* Edit State Interface */
-.edit-state-interface {
-  width: 100%;
-  padding: 15px;
-  background: #f8f9fa;
-  border: 2px solid #1a73e8;
-  border-radius: 6px;
-  margin-top: 10px;
-}
-
-.edit-header {
-  margin-bottom: 12px;
-}
-
-.edit-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1a73e8;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.edit-input-container {
+.debug-mode h3 {
   margin-bottom: 15px;
-}
-
-.edit-input-container .rename-input {
-  width: 100%;
-  padding: 10px 12px;
+  color: #202124;
   font-size: 16px;
   font-weight: 600;
-  border: 2px solid #dadce0;
-  border-radius: 4px;
-  background: white;
+}
+
+.debug-options {
+  display: none;
+  margin-top: 15px;
+}
+
+.debug-options.show {
+  display: block;
+}
+
+/* Light theme (explicit) */
+:root,
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  --border-color: #dadce0;
+  --accent-primary: #1a73e8;
+  --accent-secondary: #34a853;
+}
+
+/* Ensure light theme styles are applied */
+:root body,
+[data-theme="light"] body {
+  background-color: #ffffff;
   color: #202124;
-  outline: none;
-  transition: border-color 0.2s ease;
 }
 
-.edit-input-container .rename-input:focus {
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+:root .header,
+[data-theme="light"] .header {
+  background-color: #f8f9fa;
+  border-bottom-color: #dadce0;
 }
 
-.edit-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+:root .header h1,
+[data-theme="light"] .header h1 {
+  color: #202124;
 }
 
-.edit-actions button {
-  padding: 8px 16px;
-  font-size: 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 80px;
+:root .container,
+[data-theme="light"] .container {
+  background-color: #ffffff;
 }
 
-.save-rename-btn {
-  background: #34a853;
-  color: white;
-  border: none;
+:root .saved-states,
+:root .settings,
+:root .keyboard-shortcuts,
+:root .debug-mode,
+[data-theme="light"] .saved-states,
+[data-theme="light"] .settings,
+[data-theme="light"] .keyboard-shortcuts,
+[data-theme="light"] .debug-mode {
+  background-color: #ffffff;
+  border-color: #dadce0;
 }
 
-.save-rename-btn:hover:not(:disabled) {
-  background: #2d8745;
+:root .saved-states h3,
+:root .settings h3,
+:root .keyboard-shortcuts h3,
+:root .debug-mode h3,
+[data-theme="light"] .saved-states h3,
+[data-theme="light"] .settings h3,
+[data-theme="light"] .keyboard-shortcuts h3,
+[data-theme="light"] .debug-mode h3 {
+  color: #202124;
 }
 
-.save-rename-btn:disabled {
-  background: #dadce0;
+/* Dark mode */
+[data-theme="dark"] body {
+  background-color: #202124;
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .header {
+  background-color: #303134;
+  border-bottom-color: #3c4043;
+}
+
+[data-theme="dark"] .header h1 {
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .container {
+  background-color: #202124;
+}
+
+[data-theme="dark"] .saved-states,
+[data-theme="dark"] .settings,
+[data-theme="dark"] .keyboard-shortcuts,
+[data-theme="dark"] .debug-mode {
+  background-color: #2d2e30;
+  border-color: #3c4043;
+}
+
+[data-theme="dark"] .saved-states h3,
+[data-theme="dark"] .settings h3,
+[data-theme="dark"] .keyboard-shortcuts h3,
+[data-theme="dark"] .debug-mode h3 {
+  color: #e8eaed;
+}
+
+/* Dark mode for state items */
+[data-theme="dark"] .state-item {
+  background: #2d2e30;
+  border-color: #3c4043;
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .state-item:hover {
+  background: #3c4043;
+  border-color: #5f6368;
+}
+
+[data-theme="dark"] .state-item.active-state {
+  background: #1a73e8;
+  border-left-color: #8ab4f8;
+}
+
+[data-theme="dark"] .state-name {
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .state-info {
   color: #9aa0a6;
-  cursor: not-allowed;
 }
 
-.cancel-rename-btn {
-  background: #5f6368;
-  color: white;
-  border: none;
+[data-theme="dark"] .active-indicator {
+  background: #81c995;
 }
 
-.cancel-rename-btn:hover {
-  background: #494c50;
+[data-theme="dark"] .state-actions button.primary {
+  background: #8ab4f8;
+  color: #202124;
+}
+
+[data-theme="dark"] .state-actions button.secondary {
+  background: #3c4043;
+  color: #e8eaed;
+  border-color: #5f6368;
+}
+
+[data-theme="dark"] .switch-btn {
+  background: #8ab4f8;
+  color: #202124;
+}
+
+[data-theme="dark"] .rename-btn {
+  background: #fdd663;
+  color: #202124;
+}
+
+[data-theme="dark"] .delete-btn {
+  background: #f28b82;
+  color: #202124;
+}
+
+[data-theme="dark"] .empty-state {
+  color: #5f6368;
+}
+
+[data-theme="dark"] .empty-state h3 {
+  color: #9aa0a6;
+}
+
+/* Dark mode for editing interface */
+[data-theme="dark"] .edit-state-interface {
+  background: #1a73e8;
+  border-color: #8ab4f8;
+}
+
+[data-theme="dark"] .edit-header {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .edit-label {
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .edit-input-container input {
+  background: #202124;
+  border-color: #5f6368;
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .edit-input-container input:focus {
+  border-color: #8ab4f8;
+  box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.2);
+}
+
+[data-theme="dark"] .save-rename-btn {
+  background: #81c995;
+  color: #202124;
+}
+
+[data-theme="dark"] .cancel-rename-btn {
+  background: #3c4043;
+  color: #e8eaed;
+  border-color: #5f6368;
+}
+
+[data-theme="dark"] .rename-input {
+  background: #202124;
+  border-color: #8ab4f8;
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .divider {
+  background: #3c4043;
 }

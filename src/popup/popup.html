@@ -26,6 +26,17 @@
         <div class="setup-form">
           <label for="firstStateName">Name your current bookmarks bar:</label>
           <input type="text" id="firstStateName" placeholder="e.g., Personal, Work, Development" maxlength="50" />
+          
+          <div class="setup-options">
+            <label class="toggle-label">
+              <span class="toggle-text">Dark Mode</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="setupDarkModeToggle">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+          
           <div class="setup-actions">
             <button id="createFirstState" class="primary">Create First State</button>
             <button id="skipSetup" class="secondary">Skip for Now</button>
@@ -52,19 +63,26 @@
           <h3>Settings</h3>
           <div class="setting-item">
             <label class="toggle-label">
-              <input type="checkbox" id="autoSaveToggle" />
-              <span class="toggle-slider"></span>
-              <span class="toggle-text">Auto-save current state</span>
+              <span class="toggle-text">Auto-save every 5 minutes</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="autoSaveToggle" checked>
+                <span class="toggle-slider"></span>
+              </div>
             </label>
           </div>
           <div class="setting-item">
-            <label for="autoSaveInterval">Auto-save interval:</label>
-            <select id="autoSaveInterval">
-              <option value="1">1 minute</option>
-              <option value="5" selected>5 minutes</option>
-              <option value="10">10 minutes</option>
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
+            <label class="toggle-label">
+              <span class="toggle-text">Dark Mode</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label for="defaultStateSelect" class="setting-label">Default State:</label>
+            <select id="defaultStateSelect" class="setting-select">
+              <option value="">No default</option>
             </select>
           </div>
         </div>
