@@ -1,6 +1,6 @@
 # Terms of Service for Bookmarks Bar Switcher
 
-**Last Updated:** December 2024  
+**Last Updated:** August 2025
 **Version:** 1.0.0
 
 ## Acceptance of Terms
@@ -121,8 +121,8 @@ If any provision of these Terms is found to be unenforceable or invalid, that pr
 
 For questions about these Terms of Service, please contact us:
 
-- **Email**: [Your Contact Email]
-- **GitHub**: [Your GitHub Repository]
+- **Email**: cameron.marotto@proton.me
+- **GitHub**: https://github.com/xeptor6569/bookmark-bar-switcher
 - **Chrome Web Store**: [Extension Store Page]
 
 ## Entire Agreement
