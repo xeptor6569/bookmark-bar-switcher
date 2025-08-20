@@ -580,6 +580,164 @@ body {
   transform: translateX(26px);
 }
 
+/* Data Management */
+.data-management {
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.data-management h3 {
+  margin-bottom: 15px;
+  color: #202124;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.export-options {
+  margin-bottom: 15px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e8eaed;
+}
+
+.export-option {
+  margin-bottom: 8px;
+}
+
+.export-option:last-child {
+  margin-bottom: 0;
+}
+
+.export-option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #202124;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.export-option input[type="checkbox"] {
+  margin: 0;
+}
+
+.privacy-options {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e8eaed;
+}
+
+.privacy-options label {
+  display: block;
+  margin-bottom: 6px;
+  color: #202124;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.privacy-options select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #202124;
+  font-size: 14px;
+}
+
+.data-actions {
+  display: grid;
+  
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.data-actions button {
+  padding: 8px 16px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  color: #202124;
+}
+
+.data-actions button:hover {
+  background: #f8f9fa;
+  border-color: #1a73e8;
+}
+
+.data-actions button.primary {
+  background: #1a73e8;
+  color: #ffffff;
+  border-color: #1a73e8;
+}
+
+.data-actions button.primary:hover {
+  background: #1557b0;
+  border-color: #1557b0;
+}
+
+.data-actions button.secondary {
+  background: #ffffff;
+  color: #202124;
+  border-color: #dadce0;
+}
+
+.data-actions button.secondary:hover {
+  background: #f8f9fa;
+  border-color: #1a73e8;
+}
+
+.data-actions button.danger {
+  background: #dc3545;
+  color: #ffffff;
+  border-color: #dc3545;
+}
+
+.data-actions button.danger:hover {
+  background: #c82333;
+  border-color: #c82333;
+}
+
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e8eaed;
+  font-size: 14px;
+  color: #5f6368;
+}
+
+/* Only spin the sync indicator in the data management section */
+.data-management .sync-status .sync-indicator {
+  font-size: 16px;
+  animation: spin 1s linear infinite;
+}
+
+/* Don't spin when showing synced status (checkmark) */
+.data-management .sync-status .sync-indicator.synced {
+  animation: none !important;
+}
+
+.sync-text {
+  color: #5f6368;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Keyboard shortcuts */
 .keyboard-shortcuts {
   margin-bottom: 20px;
@@ -641,6 +799,10 @@ body {
   border: 1px solid #dadce0;
   border-radius: 8px;
   padding: 20px;
+}
+
+.debug-toggle {
+  margin-bottom: 15px;
 }
 
 .debug-mode h3 {
@@ -909,6 +1071,92 @@ body {
   color: #e5e5e5;
 }
 
+/* Dark mode for data management */
+[data-theme="dark"] .data-management {
+  background: #2b2b2b;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .data-management h3 {
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .export-options {
+  background: #353535;
+  border-color: #4a4a4a;
+}
+
+[data-theme="dark"] .export-option label {
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .privacy-options {
+  border-top-color: #4a4a4a;
+}
+
+[data-theme="dark"] .privacy-options label {
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .privacy-options select {
+  background: #262626;
+  border-color: #525252;
+  color: #d4d4d4;
+}
+
+[data-theme="dark"] .data-actions button {
+  background: #353535;
+  color: #e5e5e5;
+  border-color: #525252;
+}
+
+[data-theme="dark"] .data-actions button:hover {
+  background: #404040;
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] .data-actions button.primary {
+  background: #60a5fa;
+  color: #1e293b;
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] .data-actions button.primary:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+[data-theme="dark"] .data-actions button.secondary {
+  background: #353535;
+  color: #e5e5e5;
+  border-color: #525252;
+}
+
+[data-theme="dark"] .data-actions button.secondary:hover {
+  background: #404040;
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] .data-actions button.danger {
+  background: #dc2626;
+  color: #fef2f2;
+  border-color: #dc2626;
+}
+
+[data-theme="dark"] .data-actions button.danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+[data-theme="dark"] .sync-status {
+  background: #353535;
+  border-color: #4a4a4a;
+}
+
+[data-theme="dark"] .sync-text {
+  color: #a3a3a3;
+}
+
 /* Dark mode for buttons */
 [data-theme="dark"] .state-actions button.primary:hover {
   background: #3b82f6;
@@ -1029,6 +1277,19 @@ body {
 .status.undo .undo-btn:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: scale(1.05);
+}
+
+/* Prevent spinning animation on status content */
+.status {
+  animation: slideDown 0.3s ease-out !important;
+}
+
+/* Target specific elements inside status to prevent spinning */
+.status span,
+.status button,
+.status .undo-btn {
+  animation: none !important;
+  transform: none !important;
 }
 
 @keyframes slideDown {
