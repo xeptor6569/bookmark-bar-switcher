@@ -435,7 +435,17 @@ document.addEventListener('DOMContentLoaded', function () {
         function (response) {
           if (response.success) {
             showStatus(`State "${stateName}" deleted`, 'success');
-            loadSavedStates();
+            
+            // If we deleted the current active state, clear it
+            if (window.currentStateName === stateName) {
+              window.currentStateName = null;
+              chrome.storage.sync.remove(['currentStateName']);
+            }
+            
+            // Add a small delay to ensure background script has processed the deletion
+            setTimeout(() => {
+              loadSavedStates();
+            }, 100);
           } else {
             showStatus(response.error || 'Failed to delete state', 'error');
           }
@@ -1215,11 +1225,12 @@ document.addEventListener('DOMContentLoaded', function () {
       if (response && response.success) {
         showStatus(`State renamed to "${newName}"`, 'success');
         
-        // Update current state name if it was renamed
-        // This line is no longer needed as currentStateNameInput is removed
-        // if (currentStateNameInput.value === oldName) {
-        //   currentStateNameInput.value = newName;
-        // }
+        // Update current state name if the renamed state was the active one
+        if (window.currentStateName === oldName) {
+          window.currentStateName = newName;
+          // Also update storage
+          chrome.storage.sync.set({ currentStateName: newName });
+        }
         
         // Refresh the states list
         loadSavedStates();
