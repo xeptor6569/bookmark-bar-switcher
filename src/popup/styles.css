@@ -170,14 +170,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  margin-bottom: 8px;
+  padding: 16px 20px;
+  margin-bottom: 10px;
   background: #ffffff;
   border: 1px solid #dadce0;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.2s ease;
   position: relative;
   cursor: pointer;
+  min-height: 60px;
 }
 
 .state-item:hover {
@@ -204,17 +205,28 @@ body {
   border-radius: 2px 0 0 2px;
 }
 
+.state-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.state-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .state-name {
   font-weight: 500;
   color: #202124;
-  flex: 1;
-  margin-right: 12px;
+  font-size: 15px;
 }
 
-.state-info {
+.state-meta {
   color: #5f6368;
   font-size: 12px;
-  margin-top: 4px;
 }
 
 .active-indicator {
@@ -271,22 +283,24 @@ body {
 /* State item buttons */
 .state-item-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
+  margin-left: 12px;
 }
 
 .state-item-actions button {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: none;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 28px;
-  height: 28px;
+  min-width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .edit-btn {
@@ -493,10 +507,11 @@ body {
 }
 
 .setting-item {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 4px 0;
 }
 
 .setting-item:last-child {
@@ -738,27 +753,31 @@ body {
 
 /* Dark mode for state items */
 [data-theme="dark"] .state-item {
-  background: #2d2e30;
-  border-color: #3c4043;
-  color: #e8eaed;
+  background: #2b2b2b;
+  border-color: #404040;
+  color: #d4d4d4;
 }
 
 [data-theme="dark"] .state-item:hover {
-  background: #3c4043;
-  border-color: #5f6368;
+  background: #353535;
+  border-color: #4a4a4a;
 }
 
 [data-theme="dark"] .state-item.active-state {
-  background: #1a73e8;
-  border-left-color: #8ab4f8;
+  background: #1e3a8a;
+  border-left-color: #60a5fa;
 }
 
 [data-theme="dark"] .state-name {
-  color: #e8eaed;
+  color: #e5e5e5;
 }
 
 [data-theme="dark"] .state-info {
-  color: #9aa0a6;
+  color: #d4d4d4;
+}
+
+[data-theme="dark"] .state-meta {
+  color: #a3a3a3;
 }
 
 [data-theme="dark"] .active-indicator {
@@ -766,96 +785,210 @@ body {
 }
 
 [data-theme="dark"] .state-actions button.primary {
-  background: #8ab4f8;
-  color: #202124;
+  background: #60a5fa;
+  color: #1e293b;
 }
 
 [data-theme="dark"] .state-actions button.secondary {
-  background: #3c4043;
-  color: #e8eaed;
-  border-color: #5f6368;
+  background: #525252;
+  color: #e5e5e5;
+  border-color: #6b7280;
 }
 
 [data-theme="dark"] .edit-btn {
-  background: #fdd663;
-  color: #202124;
+  background: #eab308;
+  color: #1f2937;
 }
 
 [data-theme="dark"] .delete-btn {
-  background: #f28b82;
-  color: #202124;
+  background: #dc2626;
+  color: #fef2f2;
 }
 
 [data-theme="dark"] .empty-state {
-  color: #5f6368;
+  color: #a3a3a3;
 }
 
 [data-theme="dark"] .empty-state h3 {
-  color: #9aa0a6;
+  color: #d4d4d4;
 }
 
 /* Dark mode for editing interface */
 [data-theme="dark"] .edit-state-interface {
-  background: #1a73e8;
-  border-color: #8ab4f8;
+  background: #1e3a8a;
+  border-color: #60a5fa;
 }
 
 [data-theme="dark"] .edit-header {
-  color: #ffffff;
+  color: #f3f4f6;
 }
 
 [data-theme="dark"] .edit-label {
-  color: #e8eaed;
+  color: #e5e5e5;
 }
 
 [data-theme="dark"] .edit-input-container input {
-  background: #202124;
-  border-color: #5f6368;
-  color: #e8eaed;
+  background: #262626;
+  border-color: #525252;
+  color: #d4d4d4;
 }
 
 [data-theme="dark"] .edit-input-container input:focus {
-  border-color: #8ab4f8;
-  box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.2);
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
 }
 
 [data-theme="dark"] .save-rename-btn {
-  background: #81c995;
-  color: #202124;
+  background: #65a30d;
+  color: #fefce8;
 }
 
 [data-theme="dark"] .cancel-rename-btn {
-  background: #3c4043;
-  color: #e8eaed;
-  border-color: #5f6368;
+  background: #525252;
+  color: #e5e5e5;
+  border-color: #6b7280;
 }
 
 [data-theme="dark"] .rename-input {
-  background: #202124;
-  border-color: #8ab4f8;
-  color: #e8eaed;
+  background: #262626;
+  border-color: #60a5fa;
+  color: #d4d4d4;
+}
+
+/* Dark mode for keyboard shortcuts */
+[data-theme="dark"] .keyboard-shortcuts {
+  background: #2b2b2b;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .shortcut-item {
+  background: #353535;
+  border-color: #4a4a4a;
+}
+
+[data-theme="dark"] .shortcut-key {
+  background: #525252;
+  color: #e5e5e5;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .shortcut-description {
+  color: #d4d4d4;
+}
+
+[data-theme="dark"] .shortcut-note {
+  color: #a3a3a3;
+}
+
+/* Dark mode for settings */
+[data-theme="dark"] .settings {
+  background: #2b2b2b;
+  border-color: #404040;
+}
+
+[data-theme="dark"] .setting-label {
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .setting-select {
+  background: #262626;
+  border-color: #525252;
+  color: #d4d4d4;
+}
+
+/* Dark mode for toggle switches */
+[data-theme="dark"] .toggle-slider {
+  background-color: #525252;
+}
+
+[data-theme="dark"] .toggle-switch input:checked + .toggle-slider {
+  background-color: #60a5fa;
+}
+
+[data-theme="dark"] .toggle-text {
+  color: #e5e5e5;
+}
+
+/* Dark mode for buttons */
+[data-theme="dark"] .state-actions button.primary:hover {
+  background: #3b82f6;
+}
+
+[data-theme="dark"] .state-actions button.secondary:hover {
+  background: #6b7280;
+  border-color: #9ca3af;
 }
 
 [data-theme="dark"] .divider {
-  background: #3c4043;
+  background: #525252;
+}
+
+/* Dark mode for setup screen */
+[data-theme="dark"] .setup-screen {
+  background: #262626;
+}
+
+[data-theme="dark"] .welcome-message h2 {
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .welcome-message p {
+  color: #a3a3a3;
+}
+
+[data-theme="dark"] .setup-form label {
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .setup-form input[type="text"] {
+  background: #2b2b2b;
+  border-color: #525252;
+  color: #d4d4d4;
+}
+
+[data-theme="dark"] .setup-form input[type="text"]:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+[data-theme="dark"] .setup-actions button.primary {
+  background: #60a5fa;
+  color: #1e293b;
+}
+
+[data-theme="dark"] .setup-actions button.secondary {
+  background: #525252;
+  color: #e5e5e5;
+  border-color: #6b7280;
+}
+
+[data-theme="dark"] .setup-actions button.primary:hover {
+  background: #3b82f6;
+}
+
+[data-theme="dark"] .setup-actions button.secondary:hover {
+  background: #6b7280;
+  border-color: #9ca3af;
 }
 
 /* Status Messages */
 .status {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
   padding: 12px 20px;
-  border-radius: 6px;
+  border-radius: 8px;
   color: white;
   font-weight: 500;
   z-index: 1000;
-  animation: slideUp 0.3s ease-out;
-  max-width: 300px;
+  animation: slideDown 0.3s ease-out;
+  max-width: 320px;
   word-wrap: break-word;
   display: flex;
   align-items: center;
   gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .status.success {
@@ -898,13 +1031,13 @@ body {
   transform: scale(1.05);
 }
 
-@keyframes slideUp {
+@keyframes slideDown {
   from {
-    transform: translateY(-100%);
+    transform: translateX(-50%) translateY(-100%);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
     opacity: 1;
   }
 }
