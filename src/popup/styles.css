@@ -271,35 +271,32 @@ body {
 /* State item buttons */
 .state-item-actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
 }
 
 .state-item-actions button {
-  padding: 4px 8px;
+  padding: 6px 8px;
   border: none;
   border-radius: 4px;
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.switch-btn {
-  background: #1a73e8;
-  color: white;
-}
-
-.switch-btn:hover {
-  background: #1557b0;
-}
-
-.rename-btn {
+.edit-btn {
   background: #fbbc04;
   color: #202124;
 }
 
-.rename-btn:hover {
+.edit-btn:hover {
   background: #f9a825;
+  transform: scale(1.05);
 }
 
 .delete-btn {
@@ -309,6 +306,41 @@ body {
 
 .delete-btn:hover {
   background: #d93025;
+  transform: scale(1.05);
+}
+
+/* State item clickable area */
+.state-item {
+  cursor: pointer;
+  user-select: none;
+}
+
+.state-item:hover {
+  background: #f1f3f4;
+  border-color: #dadce0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.state-item:active {
+  transform: translateY(0);
+  transition: transform 0.1s ease;
+}
+
+/* Active state animation */
+.state-item.active-state {
+  animation: stateActivated 0.3s ease-out;
+}
+
+@keyframes stateActivated {
+  0% {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* Empty state */
@@ -744,12 +776,7 @@ body {
   border-color: #5f6368;
 }
 
-[data-theme="dark"] .switch-btn {
-  background: #8ab4f8;
-  color: #202124;
-}
-
-[data-theme="dark"] .rename-btn {
+[data-theme="dark"] .edit-btn {
   background: #fdd663;
   color: #202124;
 }
@@ -811,4 +838,82 @@ body {
 
 [data-theme="dark"] .divider {
   background: #3c4043;
+}
+
+/* Status Messages */
+.status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out;
+  max-width: 300px;
+  word-wrap: break-word;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status.success {
+  background: #34a853;
+}
+
+.status.error {
+  background: #ea4335;
+}
+
+.status.info {
+  background: #1a73e8;
+}
+
+.status.warning {
+  background: #fbbc04;
+  color: #202124;
+}
+
+.status.undo {
+  background: #1a73e8;
+  padding-right: 16px;
+}
+
+.status.undo .undo-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.status.undo .undo-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Dark mode for status messages */
+[data-theme="dark"] .status.undo .undo-btn {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .status.undo .undo-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
 }

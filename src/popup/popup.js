@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const includeBookmarksCheckbox = document.getElementById('includeBookmarks');
   const privacyOptions = document.getElementById('privacyOptions');
   const privacyLevelSelect = document.getElementById('privacyLevel');
-  const defaultStateSelect = document.getElementById('defaultStateSelect');
 
   // Pop out button handler
   popOutBtn.addEventListener('click', function() {
@@ -349,29 +348,37 @@ document.addEventListener('DOMContentLoaded', function () {
             <small class="state-date">Last updated: ${formatDate(state.lastUpdated)}</small>
           </div>
         </div>
-        <div class="state-actions">
-          <button class="rename-btn" data-state-name="${state.name}" title="Rename state">✏️</button>
-          <button class="switch-btn" data-state-name="${state.name}">Switch To</button>
-          <button class="delete-btn danger" data-state-name="${state.name}">Delete</button>
+        <div class="state-item-actions">
+          <button class="edit-btn" data-state-name="${state.name}" title="Edit state">✏️</button>
+          <button class="delete-btn" data-state-name="${state.name}" title="Delete state">🗑️</button>
         </div>
       `;
 
       // Add event listeners
-      const switchBtn = stateItem.querySelector('.switch-btn');
       const deleteBtn = stateItem.querySelector('.delete-btn');
-      const renameBtn = stateItem.querySelector('.rename-btn');
+      const editBtn = stateItem.querySelector('.edit-btn');
 
-      switchBtn.addEventListener('click', function () {
-        const stateName = this.getAttribute('data-state-name');
-        switchToState(stateName);
+      // Make entire state item clickable for switching
+      stateItem.addEventListener('click', function(e) {
+        // Don't trigger switch if clicking on action buttons
+        if (e.target.closest('.state-item-actions')) {
+          return;
+        }
+        
+        const stateName = stateItem.getAttribute('data-state-name');
+        if (stateName !== window.currentStateName) {
+          switchToStateWithUndo(stateName);
+        }
       });
 
-      deleteBtn.addEventListener('click', function () {
+      deleteBtn.addEventListener('click', function (e) {
+        e.stopPropagation(); // Prevent triggering the state item click
         const stateName = this.getAttribute('data-state-name');
         deleteState(stateName);
       });
 
-      renameBtn.addEventListener('click', function () {
+      editBtn.addEventListener('click', function (e) {
+        e.stopPropagation(); // Prevent triggering the state item click
         const stateName = this.getAttribute('data-state-name');
         startRenameState(stateName, stateItem);
       });
@@ -380,10 +387,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Switch to a specific state
-  function switchToState(stateName) {
-    showStatus(`Switching to "${stateName}" state...`, 'info');
-
+  // Switch to a specific state with undo functionality
+  function switchToStateWithUndo(stateName) {
+    const previousState = window.currentStateName;
+    
+    // Immediate switch
     chrome.runtime.sendMessage(
       {
         action: 'switchToState',
@@ -391,11 +399,15 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       function (response) {
         if (response.success) {
-          showStatus(`Switched to "${stateName}" state`, 'success');
           // Update the global current state name
           window.currentStateName = stateName;
           // Save to storage
           chrome.storage.sync.set({ currentStateName: stateName });
+          
+          // Show status with undo button
+          showStatusWithUndo(`Switched to "${stateName}" state ✓`, previousState);
+          
+          // Refresh the states list to show new active state
           loadSavedStates();
         } else {
           console.error('Switch state error:', response.error);
@@ -435,6 +447,29 @@ document.addEventListener('DOMContentLoaded', function () {
       status.textContent = '';
       status.className = 'status';
     }, 3000);
+  }
+
+  // Show status message with undo button
+  function showStatusWithUndo(message, previousState) {
+    status.innerHTML = `
+      <span>${message}</span>
+      <button class="undo-btn" onclick="undoStateSwitch('${previousState}')">Undo</button>
+    `;
+    status.className = 'status undo';
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      status.textContent = '';
+      status.className = 'status';
+    }, 5000);
+  }
+
+  // Undo state switch
+  // eslint-disable-next-line no-unused-vars
+  function undoStateSwitch(previousState) {
+    if (previousState) {
+      switchToStateWithUndo(previousState);
+    }
   }
 
   // Export states (if element exists)
