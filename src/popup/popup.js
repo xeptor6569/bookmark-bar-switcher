@@ -28,9 +28,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const privacyLevelSelect = document.getElementById('privacyLevel');
 
   // Pop out button handler
-  popOutBtn.addEventListener('click', function() {
-    popOutExtension();
-  });
+  if (popOutBtn) {
+    popOutBtn.addEventListener('click', function() {
+      popOutExtension();
+    });
+  }
 
   // Dark mode toggle handler
   const darkModeToggle = document.getElementById('darkModeToggle');
@@ -118,12 +120,12 @@ document.addEventListener('DOMContentLoaded', function () {
   chrome.storage.sync.get(['bookmarkStates'], function (result) {
     if (!result.bookmarkStates || result.bookmarkStates.length === 0) {
       // First time - show setup screen
-      firstTimeSetup.style.display = 'block';
-      mainInterface.style.display = 'none';
+      if (firstTimeSetup) firstTimeSetup.style.display = 'block';
+      if (mainInterface) mainInterface.style.display = 'none';
     } else {
       // Has existing states - show main interface
-      firstTimeSetup.style.display = 'none';
-      mainInterface.style.display = 'block';
+      if (firstTimeSetup) firstTimeSetup.style.display = 'none';
+      if (mainInterface) mainInterface.style.display = 'block';
       loadSavedStates();
     }
   });
@@ -132,7 +134,8 @@ document.addEventListener('DOMContentLoaded', function () {
   checkSyncStatus();
 
   // First-time setup event listeners
-  createFirstStateBtn.addEventListener('click', function () {
+  if (createFirstStateBtn) {
+    createFirstStateBtn.addEventListener('click', function () {
     const stateName = firstStateNameInput.value.trim();
     if (!stateName) {
       showStatus('Please enter a state name', 'error');
@@ -151,8 +154,8 @@ document.addEventListener('DOMContentLoaded', function () {
           showStatus('First state created successfully!', 'success');
 
           // Hide setup, show main interface
-          firstTimeSetup.style.display = 'none';
-          mainInterface.style.display = 'block';
+          if (firstTimeSetup) firstTimeSetup.style.display = 'none';
+          if (mainInterface) mainInterface.style.display = 'block';
 
           // Set the current state name
           // This line is no longer needed as currentStateNameInput is removed
@@ -166,15 +169,18 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     );
   });
+  }
 
-  skipSetupBtn.addEventListener('click', function () {
+  if (skipSetupBtn) {
+    skipSetupBtn.addEventListener('click', function () {
     // Hide setup, show main interface
-    firstTimeSetup.style.display = 'none';
-    mainInterface.style.display = 'block';
+    if (firstTimeSetup) firstTimeSetup.style.display = 'none';
+    if (mainInterface) mainInterface.style.display = 'block';
 
     // Load empty states list
     loadSavedStates();
   });
+  }
 
   // Auto-save toggle handler (if element exists)
   if (autoSaveToggle) {
@@ -330,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function () {
     states.forEach(state => {
       const stateItem = document.createElement('div');
       stateItem.className = 'state-item';
+      stateItem.setAttribute('data-state-name', state.name);
       
       // Check if this is the current active state
       const currentStateName = getCurrentStateNameFromStorage();
@@ -477,6 +484,11 @@ document.addEventListener('DOMContentLoaded', function () {
     exportStatesBtn.addEventListener('click', () => {
       if (exportOptions) exportOptions.style.display = 'block';
       if (performExportBtn) performExportBtn.style.display = 'block';
+      
+      // Change export button to cancel button
+      exportStatesBtn.textContent = 'Cancel';
+      exportStatesBtn.className = 'danger';
+      exportStatesBtn.onclick = cancelExport;
     });
   }
 
@@ -774,11 +786,46 @@ document.addEventListener('DOMContentLoaded', function () {
       exportOptions.style.display = 'none';
       performExportBtn.style.display = 'none';
 
+      // Reset export button to normal state
+      exportStatesBtn.textContent = 'Export States';
+      exportStatesBtn.className = 'secondary';
+      exportStatesBtn.onclick = null; // Remove the cancel handler
+      exportStatesBtn.addEventListener('click', () => {
+        if (exportOptions) exportOptions.style.display = 'block';
+        if (performExportBtn) performExportBtn.style.display = 'block';
+        
+        // Change export button to cancel button
+        exportStatesBtn.textContent = 'Cancel';
+        exportStatesBtn.className = 'danger';
+        exportStatesBtn.onclick = cancelExport;
+      });
+
       showStatus('Export completed successfully', 'success');
     } catch (error) {
       console.error('Export failed:', error);
       showStatus(`Export failed: ${error.message}`, 'error');
     }
+  }
+
+  // Cancel export and reset button state
+  function cancelExport() {
+    // Hide export options
+    if (exportOptions) exportOptions.style.display = 'none';
+    if (performExportBtn) performExportBtn.style.display = 'none';
+    
+    // Reset export button to normal state
+    exportStatesBtn.textContent = 'Export States';
+    exportStatesBtn.className = 'secondary';
+    exportStatesBtn.onclick = null; // Remove the cancel handler
+    exportStatesBtn.addEventListener('click', () => {
+      if (exportOptions) exportOptions.style.display = 'block';
+      if (performExportBtn) performExportBtn.style.display = 'block';
+      
+      // Change export button to cancel button
+      exportStatesBtn.textContent = 'Cancel';
+      exportStatesBtn.className = 'danger';
+      exportStatesBtn.onclick = cancelExport;
+    });
   }
 
   // Process bookmarks for export based on privacy level
@@ -1062,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Start renaming a state
   function startRenameState(stateName, stateItem) {
     const stateInfo = stateItem.querySelector('.state-info');
-    const stateActions = stateItem.querySelector('.state-actions');
+    const stateActions = stateItem.querySelector('.state-item-actions');
     
     // Create editing interface
     const editInterface = `
