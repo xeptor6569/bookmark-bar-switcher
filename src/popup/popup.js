@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Pop out button handler
   if (popOutBtn) {
-    popOutBtn.addEventListener('click', function() {
+    popOutBtn.addEventListener('click', function () {
       popOutExtension();
     });
   }
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Import folder button handler
   const importFolderBtn = document.getElementById('importFolderBtn');
   if (importFolderBtn) {
-    importFolderBtn.addEventListener('click', function() {
+    importFolderBtn.addEventListener('click', function () {
       importExistingFolder();
     });
   }
@@ -45,35 +45,38 @@ document.addEventListener('DOMContentLoaded', function () {
   // Dark mode toggle handler
   const darkModeToggle = document.getElementById('darkModeToggle');
   if (darkModeToggle) {
-    darkModeToggle.addEventListener('change', function() {
+    darkModeToggle.addEventListener('change', function () {
       const isDarkMode = darkModeToggle.checked;
       if (isDarkMode) {
         document.documentElement.setAttribute('data-theme', 'dark');
       } else {
         document.documentElement.removeAttribute('data-theme');
       }
-      
+
       // Save preference to storage
       chrome.storage.sync.set({ darkMode: isDarkMode });
-      
-      showStatus(isDarkMode ? 'Dark mode enabled' : 'Light mode enabled', 'info');
+
+      showStatus(
+        isDarkMode ? 'Dark mode enabled' : 'Light mode enabled',
+        'info'
+      );
     });
   }
 
   // Setup dark mode toggle handler
   const setupDarkModeToggle = document.getElementById('setupDarkModeToggle');
   if (setupDarkModeToggle) {
-    setupDarkModeToggle.addEventListener('change', function() {
+    setupDarkModeToggle.addEventListener('change', function () {
       const isDarkMode = setupDarkModeToggle.checked;
       if (isDarkMode) {
         document.documentElement.setAttribute('data-theme', 'dark');
       } else {
         document.documentElement.removeAttribute('data-theme');
       }
-      
+
       // Save preference to storage
       chrome.storage.sync.set({ darkMode: isDarkMode });
-      
+
       // Update main toggle if it exists
       if (darkModeToggle) {
         darkModeToggle.checked = isDarkMode;
@@ -82,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Load dark mode preference
-  chrome.storage.sync.get(['darkMode'], function(result) {
+  chrome.storage.sync.get(['darkMode'], function (result) {
     if (result.darkMode) {
       if (darkModeToggle) darkModeToggle.checked = true;
       if (setupDarkModeToggle) setupDarkModeToggle.checked = true;
@@ -95,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Pop out extension to new window
   function popOutExtension() {
-    chrome.runtime.sendMessage({ action: 'popOut' }, (response) => {
+    chrome.runtime.sendMessage({ action: 'popOut' }, response => {
       if (response && response.success) {
         // Close the popup after successfully opening the new window
         window.close();
@@ -125,150 +128,156 @@ document.addEventListener('DOMContentLoaded', function () {
   );
 
   // Check if this is first-time setup
-  chrome.storage.sync.get(['bookmarkStates', 'hasSeenWelcome'], function (result) {
-    if (!result.bookmarkStates || result.bookmarkStates.length === 0) {
-      // First time - show setup screen
-      if (firstTimeSetup) firstTimeSetup.style.display = 'block';
-      if (mainInterface) mainInterface.style.display = 'none';
-    } else {
-      // Has existing states - show main interface
-      if (firstTimeSetup) firstTimeSetup.style.display = 'none';
-      if (mainInterface) mainInterface.style.display = 'block';
-      loadSavedStates();
-      
-      // Show welcome message for first-time users
-      if (!result.hasSeenWelcome) {
-        setTimeout(() => {
-          showStatus('Welcome! Use keyboard shortcuts for quick state switching', 'info');
-          chrome.storage.sync.set({ hasSeenWelcome: true });
-        }, 1000);
+  chrome.storage.sync.get(
+    ['bookmarkStates', 'hasSeenWelcome'],
+    function (result) {
+      if (!result.bookmarkStates || result.bookmarkStates.length === 0) {
+        // First time - show setup screen
+        if (firstTimeSetup) firstTimeSetup.style.display = 'block';
+        if (mainInterface) mainInterface.style.display = 'none';
+      } else {
+        // Has existing states - show main interface
+        if (firstTimeSetup) firstTimeSetup.style.display = 'none';
+        if (mainInterface) mainInterface.style.display = 'block';
+        loadSavedStates();
+
+        // Show welcome message for first-time users
+        if (!result.hasSeenWelcome) {
+          setTimeout(() => {
+            showStatus(
+              'Welcome! Use keyboard shortcuts for quick state switching',
+              'info'
+            );
+            chrome.storage.sync.set({ hasSeenWelcome: true });
+          }, 1000);
+        }
       }
     }
-  });
+  );
 
   // Check sync storage status
   checkSyncStatus();
-  
+
   // Load keyboard shortcuts
   loadKeyboardShortcuts();
 
   // First-time setup event listeners
   if (createFirstStateBtn) {
     createFirstStateBtn.addEventListener('click', function () {
-    const stateName = firstStateNameInput.value.trim();
-    if (!stateName) {
-      showStatus('Please enter a state name', 'error');
-      return;
-    }
-
-    showStatus('Creating your first state...', 'info');
-
-    chrome.runtime.sendMessage(
-      {
-        action: 'saveCurrentState',
-        stateName: stateName,
-      },
-      function (response) {
-        if (response && response.success) {
-          showStatus('First state created successfully!', 'success');
-
-          // Hide setup, show main interface
-          if (firstTimeSetup) firstTimeSetup.style.display = 'none';
-          if (mainInterface) mainInterface.style.display = 'block';
-
-          // Set the current state name
-          // This line is no longer needed as currentStateNameInput is removed
-          // currentStateNameInput.value = stateName;
-
-          // Load the states list
-          loadSavedStates();
-        } else {
-          showStatus('Failed to create first state', 'error');
-        }
+      const stateName = firstStateNameInput.value.trim();
+      if (!stateName) {
+        showStatus('Please enter a state name', 'error');
+        return;
       }
-    );
-  });
+
+      showStatus('Creating your first state...', 'info');
+
+      chrome.runtime.sendMessage(
+        {
+          action: 'saveCurrentState',
+          stateName: stateName,
+        },
+        function (response) {
+          if (response && response.success) {
+            showStatus('First state created successfully!', 'success');
+
+            // Hide setup, show main interface
+            if (firstTimeSetup) firstTimeSetup.style.display = 'none';
+            if (mainInterface) mainInterface.style.display = 'block';
+
+            // Set the current state name
+            // This line is no longer needed as currentStateNameInput is removed
+            // currentStateNameInput.value = stateName;
+
+            // Load the states list
+            loadSavedStates();
+          } else {
+            showStatus('Failed to create first state', 'error');
+          }
+        }
+      );
+    });
   }
 
   if (skipSetupBtn) {
     skipSetupBtn.addEventListener('click', function () {
-    // Hide setup, show main interface
-    if (firstTimeSetup) firstTimeSetup.style.display = 'none';
-    if (mainInterface) mainInterface.style.display = 'block';
+      // Hide setup, show main interface
+      if (firstTimeSetup) firstTimeSetup.style.display = 'none';
+      if (mainInterface) mainInterface.style.display = 'block';
 
-    // Load empty states list
-    loadSavedStates();
-  });
+      // Load empty states list
+      loadSavedStates();
+    });
   }
 
   // Auto-save toggle handler (if element exists)
   if (autoSaveToggle) {
     autoSaveToggle.addEventListener('change', function () {
-    const enabled = this.checked;
-    const interval = autoSaveInterval ? parseInt(autoSaveInterval.value) : 5;
+      const enabled = this.checked;
+      const interval = autoSaveInterval ? parseInt(autoSaveInterval.value) : 5;
 
-    chrome.storage.sync.set(
-      {
-        autoSaveEnabled: enabled,
-        autoSaveIntervalMinutes: interval,
-      },
-      () => {
-        if (chrome.runtime.lastError) {
-          showStatus(
-            `Failed to save settings: ${chrome.runtime.lastError.message}`,
-            'error'
-          );
-          return;
+      chrome.storage.sync.set(
+        {
+          autoSaveEnabled: enabled,
+          autoSaveIntervalMinutes: interval,
+        },
+        () => {
+          if (chrome.runtime.lastError) {
+            showStatus(
+              `Failed to save settings: ${chrome.runtime.lastError.message}`,
+              'error'
+            );
+            return;
+          }
+
+          // Send message to background script to update auto-save
+          chrome.runtime.sendMessage({
+            action: 'updateAutoSave',
+            enabled: enabled,
+            interval: interval,
+          });
+
+          showStatus(`Auto-save ${enabled ? 'enabled' : 'disabled'}`, 'info');
+          checkSyncStatus();
         }
-
-        // Send message to background script to update auto-save
-        chrome.runtime.sendMessage({
-          action: 'updateAutoSave',
-          enabled: enabled,
-          interval: interval,
-        });
-
-        showStatus(`Auto-save ${enabled ? 'enabled' : 'disabled'}`, 'info');
-        checkSyncStatus();
-      }
-    );
-  });
+      );
+    });
   }
 
   // Auto-save interval handler
   // Auto-save interval handler (if element exists)
   if (autoSaveInterval) {
     autoSaveInterval.addEventListener('change', function () {
-    const interval = parseInt(this.value);
-    const enabled = autoSaveToggle.checked;
+      const interval = parseInt(this.value);
+      const enabled = autoSaveToggle.checked;
 
-    chrome.storage.sync.set({ autoSaveIntervalMinutes: interval }, () => {
-      if (chrome.runtime.lastError) {
-        showStatus(
-          `Failed to save interval: ${chrome.runtime.lastError.message}`,
-          'error'
-        );
-        return;
-      }
+      chrome.storage.sync.set({ autoSaveIntervalMinutes: interval }, () => {
+        if (chrome.runtime.lastError) {
+          showStatus(
+            `Failed to save interval: ${chrome.runtime.lastError.message}`,
+            'error'
+          );
+          return;
+        }
 
-      if (enabled) {
-        chrome.runtime.sendMessage({
-          action: 'updateAutoSave',
-          enabled: true,
-          interval: interval,
-        });
+        if (enabled) {
+          chrome.runtime.sendMessage({
+            action: 'updateAutoSave',
+            enabled: true,
+            interval: interval,
+          });
 
-        showStatus(
-          `Auto-save interval updated to ${interval} minute${
-            interval > 1 ? 's' : ''
-          }`,
-          'info'
-        );
-      }
+          showStatus(
+            `Auto-save interval updated to ${interval} minute${
+              interval > 1 ? 's' : ''
+            }`,
+            'info'
+          );
+        }
 
-      checkSyncStatus();
+        checkSyncStatus();
+      });
     });
-  });
   }
 
   // Save current state
@@ -279,9 +288,9 @@ document.addEventListener('DOMContentLoaded', function () {
       showStatus('No active state to save', 'error');
       return;
     }
-    
+
     const stateName = activeStateItem.querySelector('.state-name').textContent;
-    
+
     // Save the current bookmark bar state to the active state
     chrome.runtime.sendMessage(
       {
@@ -356,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const stateItem = document.createElement('div');
       stateItem.className = 'state-item';
       stateItem.setAttribute('data-state-name', state.name);
-      
+
       // Check if this is the current active state
       const currentStateName = getCurrentStateNameFromStorage();
       const isActive = state.name === currentStateName;
@@ -367,16 +376,24 @@ document.addEventListener('DOMContentLoaded', function () {
       stateItem.innerHTML = `
         <div class="state-info">
           <div class="state-header">
-            <span class="state-name ${isActive ? 'active' : ''}">${state.name}</span>
+            <span class="state-name ${isActive ? 'active' : ''}">${
+        state.name
+      }</span>
             ${isActive ? '<span class="active-indicator">✓ Active</span>' : ''}
           </div>
           <div class="state-meta">
-            <small class="state-date">Last updated: ${formatDate(state.lastUpdated)}</small>
+            <small class="state-date">Last updated: ${formatDate(
+              state.lastUpdated
+            )}</small>
           </div>
         </div>
         <div class="state-item-actions">
-          <button class="edit-btn" data-state-name="${state.name}" title="Edit state">✏️</button>
-          <button class="delete-btn" data-state-name="${state.name}" title="Delete state">🗑️</button>
+          <button class="edit-btn" data-state-name="${
+            state.name
+          }" title="Edit state">✏️</button>
+          <button class="delete-btn" data-state-name="${
+            state.name
+          }" title="Delete state">🗑️</button>
         </div>
       `;
 
@@ -385,12 +402,12 @@ document.addEventListener('DOMContentLoaded', function () {
       const editBtn = stateItem.querySelector('.edit-btn');
 
       // Make entire state item clickable for switching
-      stateItem.addEventListener('click', function(e) {
+      stateItem.addEventListener('click', function (e) {
         // Don't trigger switch if clicking on action buttons
         if (e.target.closest('.state-item-actions')) {
           return;
         }
-        
+
         const stateName = stateItem.getAttribute('data-state-name');
         if (stateName !== window.currentStateName) {
           switchToStateWithUndo(stateName);
@@ -416,10 +433,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // Switch to a specific state with undo functionality
   function switchToStateWithUndo(stateName) {
     const previousState = window.currentStateName;
-    
+
     // Show loading state
     showStatus(`Switching to "${stateName}" state...`, 'info');
-    
+
     // Immediate switch
     chrome.runtime.sendMessage(
       {
@@ -432,10 +449,13 @@ document.addEventListener('DOMContentLoaded', function () {
           window.currentStateName = stateName;
           // Save to storage
           chrome.storage.sync.set({ currentStateName: stateName });
-          
+
           // Show status with undo button
-          showStatusWithUndo(`Switched to "${stateName}" state ✓`, previousState);
-          
+          showStatusWithUndo(
+            `Switched to "${stateName}" state ✓`,
+            previousState
+          );
+
           // Refresh the states list to show new active state
           loadSavedStates();
         } else {
@@ -451,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (confirm(`Are you sure you want to delete the "${stateName}" state?`)) {
       // Show loading state
       showStatus(`Deleting "${stateName}" state...`, 'info');
-      
+
       chrome.runtime.sendMessage(
         {
           action: 'deleteState',
@@ -460,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function () {
         function (response) {
           if (response.success) {
             let message = `State "${stateName}" deleted`;
-            
+
             // If we deleted the current active state, update the UI accordingly
             if (window.currentStateName === stateName) {
               if (response.switchedToState) {
@@ -473,9 +493,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 message += ' and cleared bookmarks bar';
               }
             }
-            
+
             showStatus(message, 'success');
-            
+
             // Add a small delay to ensure background script has processed the deletion
             setTimeout(() => {
               loadSavedStates();
@@ -494,7 +514,8 @@ document.addEventListener('DOMContentLoaded', function () {
     status.className = `status ${type}`;
 
     // Auto-hide after different times based on type
-    const hideDelay = type === 'error' ? 5000 : type === 'success' ? 4000 : 3000;
+    const hideDelay =
+      type === 'error' ? 5000 : type === 'success' ? 4000 : 3000;
     setTimeout(() => {
       status.textContent = '';
       status.className = 'status';
@@ -527,8 +548,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 5000);
   }
 
-
-
   // Undo state switch
   // eslint-disable-next-line no-unused-vars
   function undoStateSwitch(previousState) {
@@ -542,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function () {
     exportStatesBtn.addEventListener('click', () => {
       if (exportOptions) exportOptions.style.display = 'block';
       if (performExportBtn) performExportBtn.style.display = 'block';
-      
+
       // Change export button to cancel button
       exportStatesBtn.textContent = 'Cancel';
       exportStatesBtn.className = 'danger';
@@ -565,16 +584,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const debugOptions = document.getElementById('debugOptions');
 
   if (debugModeToggle && debugOptions) {
-    debugModeToggle.addEventListener('change', function() {
+    debugModeToggle.addEventListener('change', function () {
       debugOptions.style.display = this.checked ? 'block' : 'none';
-      
+
       // Save debug mode preference
       chrome.storage.sync.set({ debugModeEnabled: this.checked });
     });
   }
 
   // Load debug mode preference
-  chrome.storage.sync.get(['debugModeEnabled'], function(result) {
+  chrome.storage.sync.get(['debugModeEnabled'], function (result) {
     if (result.debugModeEnabled && debugModeToggle && debugOptions) {
       debugModeToggle.checked = true;
       debugOptions.style.display = 'block';
@@ -585,104 +604,109 @@ document.addEventListener('DOMContentLoaded', function () {
   const validateStatesBtn = document.getElementById('validateStates');
   if (validateStatesBtn) {
     validateStatesBtn.addEventListener('click', async () => {
-    try {
-      showStatus('Validating states...', 'info');
-      const response = await chrome.runtime.sendMessage({
-        action: 'validateStates',
-      });
-      if (response && response.success) {
-        showStatus(response.message, 'success');
-        await loadSavedStates(); // Refresh the states list
-      } else {
-        showStatus('Failed to validate states', 'error');
+      try {
+        showStatus('Validating states...', 'info');
+        const response = await chrome.runtime.sendMessage({
+          action: 'validateStates',
+        });
+        if (response && response.success) {
+          showStatus(response.message, 'success');
+          await loadSavedStates(); // Refresh the states list
+        } else {
+          showStatus('Failed to validate states', 'error');
+        }
+      } catch (error) {
+        console.error('Error handling response:', error);
+        showStatus('Error during state validation', 'error');
       }
-    } catch (error) {
-      console.error('Error handling response:', error);
-      showStatus('Error during state validation', 'error');
-    }
-  });
+    });
   }
 
   // Check storage (if element exists)
   const checkStorageBtn = document.getElementById('checkStorage');
   if (checkStorageBtn) {
     checkStorageBtn.addEventListener('click', async () => {
-    try {
-      showStatus('Checking storage...', 'info');
-      const response = await chrome.runtime.sendMessage({
-        action: 'checkStorage',
-      });
-      if (response && response.success) {
-        showStatus(response.message, 'success');
-        console.log('Storage contents:', response.data);
-      } else {
-        showStatus('Failed to check storage', 'error');
+      try {
+        showStatus('Checking storage...', 'info');
+        const response = await chrome.runtime.sendMessage({
+          action: 'checkStorage',
+        });
+        if (response && response.success) {
+          showStatus(response.message, 'success');
+          console.log('Storage contents:', response.data);
+        } else {
+          showStatus('Failed to check storage', 'error');
+        }
+      } catch (error) {
+        console.error('Error handling response:', error);
+        showStatus('Error during storage check', 'error');
       }
-    } catch (error) {
-      console.error('Error handling response:', error);
-      showStatus('Error during storage check', 'error');
-    }
-  });
+    });
   }
 
   // Recover orphaned states (if element exists)
   const recoverOrphanedBtn = document.getElementById('recoverOrphaned');
   if (recoverOrphanedBtn) {
     recoverOrphanedBtn.addEventListener('click', async () => {
-    try {
-      showStatus('Recovering orphaned states...', 'info');
-      const response = await chrome.runtime.sendMessage({
-        action: 'recoverOrphaned',
-      });
-      if (response && response.success) {
-        showStatus(response.message, 'success');
-        await loadSavedStates(); // Refresh the states list
-      } else {
-        showStatus('Failed to recover orphaned states', 'error');
+      try {
+        showStatus('Recovering orphaned states...', 'info');
+        const response = await chrome.runtime.sendMessage({
+          action: 'recoverOrphaned',
+        });
+        if (response && response.success) {
+          showStatus(response.message, 'success');
+          await loadSavedStates(); // Refresh the states list
+        } else {
+          showStatus('Failed to recover orphaned states', 'error');
+        }
+      } catch (error) {
+        console.error('Error handling response:', error);
+        showStatus('Error during orphaned state recovery', 'error');
       }
-    } catch (error) {
-      console.error('Error handling response:', error);
-      showStatus('Error during orphaned state recovery', 'error');
-    }
-  });
+    });
   }
 
   // Reset to setup (if element exists)
   const resetToSetupBtn = document.getElementById('resetToSetup');
   if (resetToSetupBtn) {
     resetToSetupBtn.addEventListener('click', async () => {
-    if (
-      confirm(
-        'This will clear all states and reset to first-time setup. Are you sure?'
-      )
-    ) {
-      try {
-        showStatus('Resetting to setup...', 'info');
+      if (
+        confirm(
+          'This will clear all states and reset to first-time setup. Are you sure?'
+        )
+      ) {
+        try {
+          showStatus('Resetting to setup...', 'info');
 
-        // Clear all states from storage
-        await chrome.storage.sync.remove([
-          'bookmarkStates',
-          'currentStateName',
-        ]);
+          // Clear all states from storage
+          await chrome.storage.sync.remove([
+            'bookmarkStates',
+            'currentStateName',
+          ]);
 
-        // Show setup screen
-        firstTimeSetup.style.display = 'block';
-        mainInterface.style.display = 'none';
+          // Show setup screen
+          firstTimeSetup.style.display = 'block';
+          mainInterface.style.display = 'none';
 
-        // Clear the first state name input
-        firstStateNameInput.value = '';
+          // Clear the first state name input
+          firstStateNameInput.value = '';
 
-        showStatus('Reset to setup complete', 'success');
-      } catch (error) {
-        console.error('Error during reset:', error);
-        showStatus('Error during reset', 'error');
+          showStatus('Reset to setup complete', 'success');
+        } catch (error) {
+          console.error('Error during reset:', error);
+          showStatus('Error during reset', 'error');
+        }
       }
-    }
-  });
+    });
   }
 
   // Handle export options (if elements exist)
-  if (includeBookmarksCheckbox && privacyOptions && privacyLevelSelect && performExportBtn) {
+  if (
+    includeBookmarksCheckbox &&
+    privacyOptions &&
+    privacyLevelSelect &&
+    performExportBtn
+  ) {
     includeBookmarksCheckbox.addEventListener('change', function () {
       privacyOptions.style.display = this.checked ? 'block' : 'none';
 
@@ -760,7 +784,7 @@ document.addEventListener('DOMContentLoaded', function () {
   async function performExport() {
     try {
       showStatus('Preparing export...', 'info');
-      
+
       // Disable export button during operation
       if (performExportBtn) {
         performExportBtn.disabled = true;
@@ -858,7 +882,7 @@ document.addEventListener('DOMContentLoaded', function () {
       exportStatesBtn.addEventListener('click', () => {
         if (exportOptions) exportOptions.style.display = 'block';
         if (performExportBtn) performExportBtn.style.display = 'block';
-        
+
         // Change export button to cancel button
         exportStatesBtn.textContent = 'Cancel';
         exportStatesBtn.className = 'danger';
@@ -868,19 +892,21 @@ document.addEventListener('DOMContentLoaded', function () {
       showStatus('Export completed successfully', 'success');
     } catch (error) {
       console.error('Export failed:', error);
-      
+
       // Provide more specific error messages
       let errorMessage = 'Export failed';
       if (error.message.includes('permission')) {
-        errorMessage = 'Export failed: Permission denied. Please check bookmark permissions.';
+        errorMessage =
+          'Export failed: Permission denied. Please check bookmark permissions.';
       } else if (error.message.includes('storage')) {
         errorMessage = 'Export failed: Storage error. Please try again.';
       } else if (error.message.includes('bookmark')) {
-        errorMessage = 'Export failed: Bookmark access error. Please refresh and try again.';
+        errorMessage =
+          'Export failed: Bookmark access error. Please refresh and try again.';
       } else {
         errorMessage = `Export failed: ${error.message}`;
       }
-      
+
       showStatus(errorMessage, 'error');
     } finally {
       // Re-enable export button
@@ -897,7 +923,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Hide export options
     if (exportOptions) exportOptions.style.display = 'none';
     if (performExportBtn) performExportBtn.style.display = 'none';
-    
+
     // Reset export button to normal state
     exportStatesBtn.textContent = 'Export States';
     exportStatesBtn.className = 'secondary';
@@ -905,7 +931,7 @@ document.addEventListener('DOMContentLoaded', function () {
     exportStatesBtn.addEventListener('click', () => {
       if (exportOptions) exportOptions.style.display = 'block';
       if (performExportBtn) performExportBtn.style.display = 'block';
-      
+
       // Change export button to cancel button
       exportStatesBtn.textContent = 'Cancel';
       exportStatesBtn.className = 'danger';
@@ -973,7 +999,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Show loading state with progress
     showProgressStatus('Processing import file...', 10);
-    
+
     // Disable import button during operation
     if (importStatesBtn) {
       importStatesBtn.disabled = true;
@@ -1027,15 +1053,15 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       showProgressStatus('Import completed successfully!', 100);
-      
+
       // Show success message after a brief delay
       setTimeout(() => {
         showStatus('States imported successfully', 'success');
       }, 1000);
-      
+
       loadSavedStates();
       checkSyncStatus();
-      
+
       // Re-enable import button
       if (importStatesBtn) {
         importStatesBtn.disabled = false;
@@ -1073,7 +1099,7 @@ document.addEventListener('DOMContentLoaded', function () {
   async function importStatesWithBookmarks(data) {
     // Update progress
     showProgressStatus('Importing state data...', 30);
-    
+
     // First, import the basic data
     await chrome.storage.sync.set(data);
 
@@ -1081,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (data.bookmarkStates) {
       const totalStates = data.bookmarkStates.length;
       let processedStates = 0;
-      
+
       for (const state of data.bookmarkStates) {
         if (state.bookmarks) {
           try {
@@ -1137,11 +1163,15 @@ document.addEventListener('DOMContentLoaded', function () {
               error
             );
           }
-          
+
           // Update progress
           processedStates++;
-          const progress = 30 + Math.floor((processedStates / totalStates) * 60);
-          showProgressStatus(`Restoring bookmarks... (${processedStates}/${totalStates})`, progress);
+          const progress =
+            30 + Math.floor((processedStates / totalStates) * 60);
+          showProgressStatus(
+            `Restoring bookmarks... (${processedStates}/${totalStates})`,
+            progress
+          );
         }
       }
     }
@@ -1188,7 +1218,7 @@ document.addEventListener('DOMContentLoaded', function () {
   async function cleanupStates() {
     try {
       showStatus('Cleaning up states...', 'info');
-      
+
       // Disable cleanup button during operation
       if (cleanupStatesBtn) {
         cleanupStatesBtn.disabled = true;
@@ -1209,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', function () {
           } else {
             showStatus(`Cleanup failed: ${response.error}`, 'error');
           }
-          
+
           // Re-enable cleanup button
           if (cleanupStatesBtn) {
             cleanupStatesBtn.disabled = false;
@@ -1221,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (error) {
       console.error('Cleanup failed:', error);
       showStatus(`Cleanup failed: ${error.message}`, 'error');
-      
+
       // Re-enable cleanup button on error
       if (cleanupStatesBtn) {
         cleanupStatesBtn.disabled = false;
@@ -1242,11 +1272,11 @@ document.addEventListener('DOMContentLoaded', function () {
       const now = new Date();
       const diffTime = Math.abs(now - date);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       if (diffDays === 1) return 'Today';
       if (diffDays === 2) return 'Yesterday';
       if (diffDays <= 7) return `${diffDays - 1} days ago`;
-      
+
       return date.toLocaleDateString();
     } catch (error) {
       return 'Unknown';
@@ -1257,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function startRenameState(stateName, stateItem) {
     const stateInfo = stateItem.querySelector('.state-info');
     const stateActions = stateItem.querySelector('.state-item-actions');
-    
+
     // Create editing interface
     const editInterface = `
       <div class="edit-state-interface">
@@ -1273,24 +1303,26 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
       </div>
     `;
-    
+
     // Hide normal state and show editing interface
     stateInfo.style.display = 'none';
     stateActions.style.display = 'none';
-    
+
     // Insert editing interface
     stateItem.insertAdjacentHTML('beforeend', editInterface);
-    
+
     // Get references to new elements
-    const editInterfaceElement = stateItem.querySelector('.edit-state-interface');
+    const editInterfaceElement = stateItem.querySelector(
+      '.edit-state-interface'
+    );
     const input = editInterfaceElement.querySelector('.rename-input');
     const saveBtn = editInterfaceElement.querySelector('.save-rename-btn');
     const cancelBtn = editInterfaceElement.querySelector('.cancel-rename-btn');
-    
+
     // Focus and select input
     input.focus();
     input.select();
-    
+
     // Handle save button
     saveBtn.addEventListener('click', () => {
       const newName = input.value.trim();
@@ -1304,25 +1336,25 @@ document.addEventListener('DOMContentLoaded', function () {
         input.focus();
       }
     });
-    
+
     // Handle cancel button
     cancelBtn.addEventListener('click', cancelRename);
-    
+
     // Handle Enter key
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         saveBtn.click();
       } else if (e.key === 'Escape') {
         cancelRename();
       }
     });
-    
+
     // Handle input validation
-    input.addEventListener('input', (e) => {
+    input.addEventListener('input', e => {
       const value = e.target.value.trim();
       saveBtn.disabled = !value || value === stateName;
     });
-    
+
     // Function to cancel and restore original state
     function cancelRename() {
       editInterfaceElement.remove();
@@ -1351,24 +1383,24 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       showStatus(`Renaming state "${oldName}" to "${newName}"...`, 'info');
-      
+
       // Send message to background script to rename state
       const response = await chrome.runtime.sendMessage({
         action: 'renameState',
         oldName: oldName,
-        newName: newName
+        newName: newName,
       });
-      
+
       if (response && response.success) {
         showStatus(`State renamed to "${newName}"`, 'success');
-        
+
         // Update current state name if the renamed state was the active one
         if (window.currentStateName === oldName) {
           window.currentStateName = newName;
           // Also update storage
           chrome.storage.sync.set({ currentStateName: newName });
         }
-        
+
         // Refresh the states list
         loadSavedStates();
       } else {
@@ -1410,7 +1442,7 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       const shortcuts = await chrome.commands.getAll();
       const shortcutList = document.getElementById('shortcutList');
-      
+
       if (!shortcutList) {
         console.log('Shortcut list element not found');
         return;
@@ -1422,16 +1454,19 @@ document.addEventListener('DOMContentLoaded', function () {
       // Create shortcut items for each command
       shortcuts.forEach(shortcut => {
         // Skip internal Chrome commands that shouldn't be displayed
-        if (shortcut.name.startsWith('_') || shortcut.name === 'execute_action') {
+        if (
+          shortcut.name.startsWith('_') ||
+          shortcut.name === 'execute_action'
+        ) {
           return;
         }
-        
+
         const shortcutItem = document.createElement('div');
         shortcutItem.className = 'shortcut-item';
-        
+
         const shortcutKey = document.createElement('span');
         shortcutKey.className = 'shortcut-key';
-        
+
         // Format the shortcut text to be more readable
         let shortcutText = shortcut.shortcut || 'Not assigned';
         if (shortcutText !== 'Not assigned') {
@@ -1449,22 +1484,23 @@ document.addEventListener('DOMContentLoaded', function () {
             .replace(/B/g, 'B')
             .replace(/S/g, 'S');
         }
-        
+
         shortcutKey.textContent = shortcutText;
-        
+
         const shortcutDescription = document.createElement('span');
         shortcutDescription.className = 'shortcut-description';
-        
+
         // Map command names to user-friendly descriptions
         const descriptions = {
           'switch-to-next-state': 'Switch to next state',
           'switch-to-previous-state': 'Switch to previous state',
           'quick-save-current-state': 'Quick save current state',
-          'show-popup': 'Show this popup'
+          'show-popup': 'Show this popup',
         };
-        
-        shortcutDescription.textContent = descriptions[shortcut.name] || shortcut.name;
-        
+
+        shortcutDescription.textContent =
+          descriptions[shortcut.name] || shortcut.name;
+
         shortcutItem.appendChild(shortcutKey);
         shortcutItem.appendChild(shortcutDescription);
         shortcutList.appendChild(shortcutItem);
@@ -1473,7 +1509,7 @@ document.addEventListener('DOMContentLoaded', function () {
       console.log('Keyboard shortcuts loaded:', shortcuts);
     } catch (error) {
       console.error('Error loading keyboard shortcuts:', error);
-      
+
       // Fallback to static shortcuts if API fails
       const shortcutList = document.getElementById('shortcutList');
       if (shortcutList) {
@@ -1503,10 +1539,10 @@ document.addEventListener('DOMContentLoaded', function () {
   async function importExistingFolder() {
     try {
       showStatus('Opening bookmarks manager...', 'info');
-      
+
       // Get all bookmarks to find folders
       const bookmarks = await chrome.bookmarks.getTree();
-      
+
       // Find all bookmark folders including root folders (depth 0) and their contents
       const folders = [];
       const findFolders = (nodes, depth = 0) => {
@@ -1518,7 +1554,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 id: node.id,
                 title: node.title,
                 children: node.children,
-                depth: depth
+                depth: depth,
               });
             }
             // Always recurse into children to preserve subfolder structure
@@ -1526,15 +1562,18 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
       };
-      
+
       findFolders(bookmarks);
-      
-      console.log('Found folders:', folders.map(f => ({
-        name: f.title,
-        depth: f.depth,
-        itemCount: f.children.length
-      })));
-      
+
+      console.log(
+        'Found folders:',
+        folders.map(f => ({
+          name: f.title,
+          depth: f.depth,
+          itemCount: f.children.length,
+        }))
+      );
+
       if (folders.length === 0) {
         showStatus('No bookmark folders found', 'warning');
         return;
@@ -1548,42 +1587,49 @@ document.addEventListener('DOMContentLoaded', function () {
           <h3>Select Folder to Import</h3>
           <p>Choose a bookmark folder to import as a new state:</p>
           <div class="folder-list">
-            ${folders.map(folder => `
+            ${folders
+              .map(
+                folder => `
               <div class="folder-item" data-folder-id="${folder.id}">
-                <span class="folder-name">${folder.title || 'Untitled Folder'}</span>
-                <span class="folder-count">${folder.children.length} items</span>
+                <span class="folder-name">${
+                  folder.title || 'Untitled Folder'
+                }</span>
+                <span class="folder-count">${
+                  folder.children.length
+                } items</span>
               </div>
-            `).join('')}
+            `
+              )
+              .join('')}
           </div>
           <div class="folder-dialog-actions">
             <button class="secondary" id="cancelImport">Cancel</button>
           </div>
         </div>
       `;
-      
+
       // Add to DOM
       document.body.appendChild(folderDialog);
-      
+
       // Add event listeners
       const folderItems = folderDialog.querySelectorAll('.folder-item');
       folderItems.forEach(item => {
         item.addEventListener('click', async () => {
           const folderId = item.dataset.folderId;
           const folder = folders.find(f => f.id === folderId);
-          
+
           if (folder) {
             await importSelectedFolder(folder);
             folderDialog.remove();
           }
         });
       });
-      
+
       // Cancel button
       const cancelBtn = folderDialog.querySelector('#cancelImport');
       cancelBtn.addEventListener('click', () => {
         folderDialog.remove();
       });
-      
     } catch (error) {
       console.error('Error importing folder:', error);
       showStatus('Failed to import folder: ' + error.message, 'error');
@@ -1595,20 +1641,23 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       const folderName = folder.title || 'Untitled Folder';
       showStatus(`Importing "${folderName}" folder...`, 'info');
-      
+
       // Send message to background script to import the folder
       const response = await chrome.runtime.sendMessage({
         action: 'importFolderAsState',
         folderId: folder.id,
-        folderName: folderName
+        folderName: folderName,
       });
-      
+
       if (response && response.success) {
-        showStatus(`Successfully imported "${folderName}" as new state!`, 'success');
-        
+        showStatus(
+          `Successfully imported "${folderName}" as new state!`,
+          'success'
+        );
+
         // Refresh the states list
         await loadSavedStates();
-        
+
         // Switch to the new state
         if (response.stateName) {
           window.currentStateName = response.stateName;
@@ -1617,7 +1666,6 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         showStatus(response?.error || 'Failed to import folder', 'error');
       }
-      
     } catch (error) {
       console.error('Error importing selected folder:', error);
       showStatus('Failed to import folder: ' + error.message, 'error');
