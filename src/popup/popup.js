@@ -34,6 +34,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Import folder button handler
+  const importFolderBtn = document.getElementById('importFolderBtn');
+  if (importFolderBtn) {
+    importFolderBtn.addEventListener('click', function() {
+      importExistingFolder();
+    });
+  }
+
   // Dark mode toggle handler
   const darkModeToggle = document.getElementById('darkModeToggle');
   if (darkModeToggle) {
@@ -1479,6 +1487,131 @@ document.addEventListener('DOMContentLoaded', function () {
           </div>
         `;
       }
+    }
+  }
+
+  // Import existing bookmarks folder to create a new state
+  async function importExistingFolder() {
+    try {
+      showStatus('Opening bookmarks manager...', 'info');
+      
+      // Get all bookmarks to find folders
+      const bookmarks = await chrome.bookmarks.getTree();
+      
+      // Find all bookmark folders including root folders (depth 0) and their contents
+      const folders = [];
+      const findFolders = (nodes, depth = 0) => {
+        for (const node of nodes) {
+          if (node.children) {
+            if (depth >= 0) {
+              // Include root folders (depth 0) and all subfolders
+              folders.push({
+                id: node.id,
+                title: node.title,
+                children: node.children,
+                depth: depth
+              });
+            }
+            // Always recurse into children to preserve subfolder structure
+            findFolders(node.children, depth + 1);
+          }
+        }
+      };
+      
+      findFolders(bookmarks);
+      
+      console.log('Found folders:', folders.map(f => ({
+        name: f.title,
+        depth: f.depth,
+        itemCount: f.children.length
+      })));
+      
+      if (folders.length === 0) {
+        showStatus('No bookmark folders found', 'warning');
+        return;
+      }
+
+      // Create folder selection dialog
+      const folderDialog = document.createElement('div');
+      folderDialog.className = 'folder-dialog';
+      folderDialog.innerHTML = `
+        <div class="folder-dialog-content">
+          <h3>Select Folder to Import</h3>
+          <p>Choose a bookmark folder to import as a new state:</p>
+          <div class="folder-list">
+            ${folders.map(folder => `
+              <div class="folder-item" data-folder-id="${folder.id}">
+                <span class="folder-name">${folder.title || 'Untitled Folder'}</span>
+                <span class="folder-count">${folder.children.length} items</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="folder-dialog-actions">
+            <button class="secondary" id="cancelImport">Cancel</button>
+          </div>
+        </div>
+      `;
+      
+      // Add to DOM
+      document.body.appendChild(folderDialog);
+      
+      // Add event listeners
+      const folderItems = folderDialog.querySelectorAll('.folder-item');
+      folderItems.forEach(item => {
+        item.addEventListener('click', async () => {
+          const folderId = item.dataset.folderId;
+          const folder = folders.find(f => f.id === folderId);
+          
+          if (folder) {
+            await importSelectedFolder(folder);
+            folderDialog.remove();
+          }
+        });
+      });
+      
+      // Cancel button
+      const cancelBtn = folderDialog.querySelector('#cancelImport');
+      cancelBtn.addEventListener('click', () => {
+        folderDialog.remove();
+      });
+      
+    } catch (error) {
+      console.error('Error importing folder:', error);
+      showStatus('Failed to import folder: ' + error.message, 'error');
+    }
+  }
+
+  // Import the selected folder as a new state
+  async function importSelectedFolder(folder) {
+    try {
+      const folderName = folder.title || 'Untitled Folder';
+      showStatus(`Importing "${folderName}" folder...`, 'info');
+      
+      // Send message to background script to import the folder
+      const response = await chrome.runtime.sendMessage({
+        action: 'importFolderAsState',
+        folderId: folder.id,
+        folderName: folderName
+      });
+      
+      if (response && response.success) {
+        showStatus(`Successfully imported "${folderName}" as new state!`, 'success');
+        
+        // Refresh the states list
+        await loadSavedStates();
+        
+        // Switch to the new state
+        if (response.stateName) {
+          window.currentStateName = response.stateName;
+          chrome.storage.sync.set({ currentStateName: response.stateName });
+        }
+      } else {
+        showStatus(response?.error || 'Failed to import folder', 'error');
+      }
+      
+    } catch (error) {
+      console.error('Error importing selected folder:', error);
+      showStatus('Failed to import folder: ' + error.message, 'error');
     }
   }
 });

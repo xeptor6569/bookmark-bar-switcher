@@ -554,6 +554,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
       return true; // Keep message channel open for async response
 
+    case 'importFolderAsState':
+      console.log('📁 Import folder as state request received');
+      importFolderAsState(request.folderId, request.folderName)
+        .then(result => sendResponse(result))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true; // Keep message channel open for async response
+
     // Handle rename state request
   }
 });
@@ -989,7 +996,11 @@ async function copyBookmarkTree(sourceBookmark, targetParentId) {
     );
 
     if (children && children.length > 0) {
+      console.log(`Copying ${children.length} children from "${sourceBookmark.title}" to target ${targetParentId}`);
+      
       for (const child of children) {
+        console.log(`Processing child: "${child.title}" (type: ${child.url ? 'bookmark' : 'folder'}, hasChildren: ${!!child.children})`);
+        
         if (child.url) {
           // It's a bookmark
           console.log(
@@ -1000,6 +1011,7 @@ async function copyBookmarkTree(sourceBookmark, targetParentId) {
             title: child.title,
             url: child.url,
           });
+          console.log(`✓ Bookmark "${child.title}" copied successfully`);
         } else {
           // It's a folder
           console.log(
@@ -1015,7 +1027,9 @@ async function copyBookmarkTree(sourceBookmark, targetParentId) {
           );
 
           // Recursively copy folder contents
+          console.log(`Recursively copying contents from "${child.title}" to new folder "${newFolder.title}"`);
           await copyBookmarkTree(child, newFolder.id);
+          console.log(`✓ Folder "${child.title}" and all contents copied successfully`);
         }
       }
     } else {
@@ -1686,5 +1700,109 @@ async function showNotification(message, type = 'info') {
     }
   } catch (error) {
     console.log(`[${type.toUpperCase()}] ${message}`);
+  }
+}
+
+// Import an existing bookmarks folder as a new state
+async function importFolderAsState(folderId, folderName) {
+  try {
+    console.log(`Importing folder "${folderName}" (ID: ${folderId}) as new state`);
+    
+    // Get the folder contents
+    const folder = await chrome.bookmarks.getSubTree(folderId);
+    if (!folder || !folder[0] || !folder[0].children) {
+      throw new Error('Invalid folder structure');
+    }
+    
+    const folderData = folder[0];
+    console.log(`Folder "${folderName}" contains ${folderData.children.length} items`);
+    
+    // Create a new state with the folder name
+    const stateName = await ensureUniqueStateName(folderName);
+    
+    // Create a backup folder in "Other Bookmarks"
+    const backupFolder = await chrome.bookmarks.create({
+      parentId: '2', // Other Bookmarks
+      title: stateName,
+    });
+    
+    console.log(`Created backup folder: ${backupFolder.id}`);
+    
+    // Copy all folder contents to the backup folder
+    let copiedCount = 0;
+    let failedCount = 0;
+    
+    console.log(`Starting to copy ${folderData.children.length} items from "${folderName}"`);
+    
+    for (const item of folderData.children) {
+      try {
+        console.log(`Processing item: "${item.title}" (type: ${item.url ? 'bookmark' : 'folder'}, hasChildren: ${!!item.children})`);
+        
+        if (item.url) {
+          // It's a bookmark
+          console.log(`Creating bookmark: "${item.title}"`);
+          await chrome.bookmarks.create({
+            parentId: backupFolder.id,
+            title: item.title,
+            url: item.url,
+          });
+          copiedCount++;
+          console.log(`✓ Bookmark "${item.title}" created successfully`);
+        } else if (item.children) {
+          // It's a subfolder - copy recursively
+          console.log(`Copying subfolder: "${item.title}" with ${item.children.length} children`);
+          
+          // First create the subfolder
+          const newSubfolder = await chrome.bookmarks.create({
+            parentId: backupFolder.id,
+            title: item.title,
+          });
+          console.log(`Created subfolder: "${item.title}" (ID: ${newSubfolder.id})`);
+          
+          // Then copy all its contents into the new subfolder
+          await copyBookmarkTree(item, newSubfolder.id);
+          copiedCount++;
+          console.log(`✓ Subfolder "${item.title}" copied successfully`);
+        }
+      } catch (error) {
+        console.error(`Failed to copy item "${item.title}":`, error);
+        failedCount++;
+      }
+    }
+    
+    console.log(`Copied ${copiedCount} items, ${failedCount} failed`);
+    
+    // Add the new state to storage
+    const states = await getStoredStates();
+    const newState = {
+      name: stateName,
+      backupFolderId: backupFolder.id,
+      backupFolderName: stateName,
+      lastUpdated: new Date().toISOString(),
+      importedFrom: folderName
+    };
+    
+    states.push(newState);
+    await chrome.storage.sync.set({ bookmarkStates: states });
+    
+    // Set as current state
+    await chrome.storage.sync.set({ currentStateName: stateName });
+    
+    // Actually switch to the new state to show the bookmarks
+    await switchToState(stateName);
+    
+    console.log(`Successfully imported folder as state: ${stateName}`);
+    
+    return {
+      success: true,
+      message: `Successfully imported "${folderName}" as new state`,
+      stateName: stateName,
+      copiedCount: copiedCount,
+      failedCount: failedCount
+    };
+    
+  } catch (error) {
+    console.error('Error importing folder as state:', error);
+    throw new Error(`Failed to import folder: ${error.message}`);
   }
 }

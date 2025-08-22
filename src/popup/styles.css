@@ -596,6 +596,115 @@ body {
   font-weight: 600;
 }
 
+/* Import Folder Section */
+.import-folder {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  border-left: 4px solid #34a853;
+}
+
+.import-folder h4 {
+  margin: 0 0 8px 0;
+  color: #202124;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.import-description {
+  margin: 0 0 16px 0;
+  color: #5f6368;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Folder Dialog */
+.folder-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.folder-dialog-content {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.folder-dialog-content h3 {
+  margin: 0 0 8px 0;
+  color: #202124;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.folder-dialog-content p {
+  margin: 0 0 20px 0;
+  color: #5f6368;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.folder-list {
+  margin-bottom: 24px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.folder-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.folder-item:hover {
+  background: #f1f3f4;
+  border-color: #dadce0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.folder-name {
+  color: #202124;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.folder-count {
+  color: #5f6368;
+  font-size: 12px;
+  background: #e8eaed;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.folder-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .export-options {
   margin-bottom: 15px;
   padding: 12px;
@@ -1237,6 +1346,52 @@ body {
 
 [data-theme="dark"] .data-management h3 {
   color: #e5e5e5;
+}
+
+[data-theme="dark"] .import-folder {
+  background: linear-gradient(135deg, #353535 0%, #2d2d2d 100%);
+  border-color: #4a4a4a;
+  border-left-color: #34a853;
+}
+
+[data-theme="dark"] .import-folder h4 {
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .import-description {
+  color: #a3a3a3;
+}
+
+/* Dark mode for folder dialog */
+[data-theme="dark"] .folder-dialog-content {
+  background: #2b2b2b;
+}
+
+[data-theme="dark"] .folder-dialog-content h3 {
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .folder-dialog-content p {
+  color: #a3a3a3;
+}
+
+[data-theme="dark"] .folder-item {
+  background: #353535;
+  border-color: #4a4a4a;
+}
+
+[data-theme="dark"] .folder-item:hover {
+  background: #404040;
+  border-color: #525252;
+}
+
+[data-theme="dark"] .folder-name {
+  color: #d4d4d4;
+}
+
+[data-theme="dark"] .folder-count {
+  background: #525252;
+  color: #a3a3a3;
 }
 
 [data-theme="dark"] .export-options {
