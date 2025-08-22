@@ -876,6 +876,10 @@ async function deleteState(stateName) {
     }
 
     const state = states[stateIndex];
+    const currentStateName = await getCurrentStateName();
+    const isActiveState = currentStateName === stateName;
+
+    console.log(`Deleting state "${stateName}" (isActive: ${isActiveState})`);
 
     // Remove the state folder
     if (state.backupFolderId) {
@@ -891,9 +895,36 @@ async function deleteState(stateName) {
     states.splice(stateIndex, 1);
     await chrome.storage.sync.set({ bookmarkStates: states });
 
+    // If we deleted the active state, handle the transition
+    if (isActiveState) {
+      if (states.length > 0) {
+        // Switch to the first available state
+        const nextState = states[0];
+        console.log(`Switching to next available state: ${nextState.name}`);
+        await chrome.storage.sync.set({ currentStateName: nextState.name });
+        await switchToState(nextState.name);
+      } else {
+        // No states left, clear current state and bookmarks bar
+        console.log('No states left, clearing current state and bookmarks bar');
+        await chrome.storage.sync.remove(['currentStateName']);
+        
+        // Clear bookmarks bar
+        const bookmarksBar = await chrome.bookmarks.getChildren('1');
+        for (const bookmark of bookmarksBar) {
+          try {
+            await chrome.bookmarks.removeTree(bookmark.id);
+            console.log(`Cleared bookmark: ${bookmark.title}`);
+          } catch (error) {
+            console.warn(`Failed to clear bookmark ${bookmark.title}:`, error);
+          }
+        }
+      }
+    }
+
     return {
       success: true,
       message: `State "${stateName}" deleted successfully`,
+      switchedToState: isActiveState && states.length > 0 ? states[0].name : null,
     };
   } catch (error) {
     console.error('Error deleting state:', error);

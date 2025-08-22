@@ -459,13 +459,22 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         function (response) {
           if (response.success) {
-            showStatus(`State "${stateName}" deleted`, 'success');
+            let message = `State "${stateName}" deleted`;
             
-            // If we deleted the current active state, clear it
+            // If we deleted the current active state, update the UI accordingly
             if (window.currentStateName === stateName) {
-              window.currentStateName = null;
-              chrome.storage.sync.remove(['currentStateName']);
+              if (response.switchedToState) {
+                // Background script switched to another state
+                window.currentStateName = response.switchedToState;
+                message += ` and switched to "${response.switchedToState}"`;
+              } else {
+                // No states left, clear current state
+                window.currentStateName = null;
+                message += ' and cleared bookmarks bar';
+              }
             }
+            
+            showStatus(message, 'success');
             
             // Add a small delay to ensure background script has processed the deletion
             setTimeout(() => {
