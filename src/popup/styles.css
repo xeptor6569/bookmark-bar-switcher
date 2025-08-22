@@ -706,6 +706,33 @@ body {
   border-color: #c82333;
 }
 
+/* Disabled button state */
+.data-actions button:disabled {
+  background: #f1f3f4;
+  color: #9aa0a6;
+  cursor: not-allowed;
+  border-color: #dadce0;
+}
+
+/* Loading button state */
+.data-actions button.loading {
+  color: transparent;
+}
+
+.data-actions button.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid #dadce0;
+  border-top: 2px solid #1a73e8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
 .sync-status {
   display: flex;
   align-items: center;
@@ -812,6 +839,49 @@ body {
   font-weight: 600;
 }
 
+/* Help Section */
+.help-section {
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.help-section h3 {
+  margin-bottom: 15px;
+  color: #202124;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.help-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tip-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #1a73e8;
+}
+
+.tip-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.tip-text {
+  color: #5f6368;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .debug-options {
   display: none;
   margin-top: 15px;
@@ -901,6 +971,7 @@ body {
 [data-theme="dark"] .saved-states,
 [data-theme="dark"] .settings,
 [data-theme="dark"] .keyboard-shortcuts,
+[data-theme="dark"] .help-section,
 [data-theme="dark"] .debug-mode {
   background-color: #2d2e30;
   border-color: #3c4043;
@@ -909,6 +980,7 @@ body {
 [data-theme="dark"] .saved-states h3,
 [data-theme="dark"] .settings h3,
 [data-theme="dark"] .keyboard-shortcuts h3,
+[data-theme="dark"] .help-section h3,
 [data-theme="dark"] .debug-mode h3 {
   color: #e8eaed;
 }
@@ -997,7 +1069,16 @@ body {
 
 [data-theme="dark"] .edit-input-container input:focus {
   border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+/* Dark mode for help section tips */
+[data-theme="dark"] .tip-item {
+  background: #353535;
+  border-left-color: #60a5fa;
+}
+
+[data-theme="dark"] .tip-text {
+  color: #a3a3a3;
 }
 
 [data-theme="dark"] .save-rename-btn {
@@ -1148,6 +1229,18 @@ body {
   border-color: #b91c1c;
 }
 
+/* Dark mode for disabled and loading buttons */
+[data-theme="dark"] .data-actions button:disabled {
+  background: #404040;
+  color: #6b7280;
+  border-color: #525252;
+}
+
+[data-theme="dark"] .data-actions button.loading::after {
+  border-color: #525252;
+  border-top-color: #60a5fa;
+}
+
 [data-theme="dark"] .sync-status {
   background: #353535;
   border-color: #4a4a4a;
@@ -1239,6 +1332,34 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* Progress indicator for long operations */
+.status.progress {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+@keyframes progressPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 .status.success {
   background: #34a853;
 }
@@ -1279,6 +1400,25 @@ body {
   transform: scale(1.05);
 }
 
+/* Retry button styles */
+.status.error .retry-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.status.error .retry-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
 /* Prevent spinning animation on status content */
 .status {
   animation: slideDown 0.3s ease-out !important;
@@ -1309,5 +1449,13 @@ body {
 }
 
 [data-theme="dark"] .status.undo .undo-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .status.error .retry-btn {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .status.error .retry-btn:hover {
   background: rgba(255, 255, 255, 0.25);
 }

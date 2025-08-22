@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
   );
 
   // Check if this is first-time setup
-  chrome.storage.sync.get(['bookmarkStates'], function (result) {
+  chrome.storage.sync.get(['bookmarkStates', 'hasSeenWelcome'], function (result) {
     if (!result.bookmarkStates || result.bookmarkStates.length === 0) {
       // First time - show setup screen
       if (firstTimeSetup) firstTimeSetup.style.display = 'block';
@@ -127,6 +127,14 @@ document.addEventListener('DOMContentLoaded', function () {
       if (firstTimeSetup) firstTimeSetup.style.display = 'none';
       if (mainInterface) mainInterface.style.display = 'block';
       loadSavedStates();
+      
+      // Show welcome message for first-time users
+      if (!result.hasSeenWelcome) {
+        setTimeout(() => {
+          showStatus('Welcome! Use Ctrl+B + Arrow keys for quick state switching', 'info');
+          chrome.storage.sync.set({ hasSeenWelcome: true });
+        }, 1000);
+      }
     }
   });
 
@@ -398,6 +406,9 @@ document.addEventListener('DOMContentLoaded', function () {
   function switchToStateWithUndo(stateName) {
     const previousState = window.currentStateName;
     
+    // Show loading state
+    showStatus(`Switching to "${stateName}" state...`, 'info');
+    
     // Immediate switch
     chrome.runtime.sendMessage(
       {
@@ -427,6 +438,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Delete a state
   function deleteState(stateName) {
     if (confirm(`Are you sure you want to delete the "${stateName}" state?`)) {
+      // Show loading state
+      showStatus(`Deleting "${stateName}" state...`, 'info');
+      
       chrome.runtime.sendMessage(
         {
           action: 'deleteState',
@@ -459,11 +473,23 @@ document.addEventListener('DOMContentLoaded', function () {
     status.textContent = message;
     status.className = `status ${type}`;
 
-    // Auto-hide after 3 seconds
+    // Auto-hide after different times based on type
+    const hideDelay = type === 'error' ? 5000 : type === 'success' ? 4000 : 3000;
     setTimeout(() => {
       status.textContent = '';
       status.className = 'status';
-    }, 3000);
+    }, hideDelay);
+  }
+
+  // Show progress status with progress bar
+  function showProgressStatus(message, progress = 0) {
+    status.innerHTML = `
+      <span>${message}</span>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: ${progress}%"></div>
+      </div>
+    `;
+    status.className = 'status progress';
   }
 
   // Show status message with undo button
@@ -480,6 +506,8 @@ document.addEventListener('DOMContentLoaded', function () {
       status.className = 'status';
     }, 5000);
   }
+
+
 
   // Undo state switch
   // eslint-disable-next-line no-unused-vars
@@ -712,6 +740,13 @@ document.addEventListener('DOMContentLoaded', function () {
   async function performExport() {
     try {
       showStatus('Preparing export...', 'info');
+      
+      // Disable export button during operation
+      if (performExportBtn) {
+        performExportBtn.disabled = true;
+        performExportBtn.textContent = 'Exporting...';
+        performExportBtn.classList.add('loading');
+      }
 
       const includeBookmarks = includeBookmarksCheckbox.checked;
       const privacyLevel = privacyLevelSelect.value;
@@ -813,7 +848,27 @@ document.addEventListener('DOMContentLoaded', function () {
       showStatus('Export completed successfully', 'success');
     } catch (error) {
       console.error('Export failed:', error);
-      showStatus(`Export failed: ${error.message}`, 'error');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Export failed';
+      if (error.message.includes('permission')) {
+        errorMessage = 'Export failed: Permission denied. Please check bookmark permissions.';
+      } else if (error.message.includes('storage')) {
+        errorMessage = 'Export failed: Storage error. Please try again.';
+      } else if (error.message.includes('bookmark')) {
+        errorMessage = 'Export failed: Bookmark access error. Please refresh and try again.';
+      } else {
+        errorMessage = `Export failed: ${error.message}`;
+      }
+      
+      showStatus(errorMessage, 'error');
+    } finally {
+      // Re-enable export button
+      if (performExportBtn) {
+        performExportBtn.disabled = false;
+        performExportBtn.textContent = 'Export';
+        performExportBtn.classList.remove('loading');
+      }
     }
   }
 
@@ -896,6 +951,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Show loading state with progress
+    showProgressStatus('Processing import file...', 10);
+    
+    // Disable import button during operation
+    if (importStatesBtn) {
+      importStatesBtn.disabled = true;
+      importStatesBtn.textContent = 'Importing...';
+      importStatesBtn.classList.add('loading');
+    }
+
     const reader = new FileReader();
     reader.onload = function (e) {
       try {
@@ -941,9 +1006,22 @@ document.addEventListener('DOMContentLoaded', function () {
         await chrome.storage.sync.set(data);
       }
 
-      showStatus('States imported successfully', 'success');
+      showProgressStatus('Import completed successfully!', 100);
+      
+      // Show success message after a brief delay
+      setTimeout(() => {
+        showStatus('States imported successfully', 'success');
+      }, 1000);
+      
       loadSavedStates();
       checkSyncStatus();
+      
+      // Re-enable import button
+      if (importStatesBtn) {
+        importStatesBtn.disabled = false;
+        importStatesBtn.textContent = 'Import States';
+        importStatesBtn.classList.remove('loading');
+      }
 
       // Update UI with imported data
       // This line is no longer needed as currentStateNameInput is removed
@@ -961,16 +1039,29 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (error) {
       console.error('Import failed:', error);
       showStatus(`Import failed: ${error.message}`, 'error');
+    } finally {
+      // Re-enable import button
+      if (importStatesBtn) {
+        importStatesBtn.disabled = false;
+        importStatesBtn.textContent = 'Import States';
+        importStatesBtn.classList.remove('loading');
+      }
     }
   }
 
   // Import states with bookmark content
   async function importStatesWithBookmarks(data) {
+    // Update progress
+    showProgressStatus('Importing state data...', 30);
+    
     // First, import the basic data
     await chrome.storage.sync.set(data);
 
     // Then restore bookmark content for each state
     if (data.bookmarkStates) {
+      const totalStates = data.bookmarkStates.length;
+      let processedStates = 0;
+      
       for (const state of data.bookmarkStates) {
         if (state.bookmarks) {
           try {
@@ -1026,6 +1117,11 @@ document.addEventListener('DOMContentLoaded', function () {
               error
             );
           }
+          
+          // Update progress
+          processedStates++;
+          const progress = 30 + Math.floor((processedStates / totalStates) * 60);
+          showProgressStatus(`Restoring bookmarks... (${processedStates}/${totalStates})`, progress);
         }
       }
     }
@@ -1072,6 +1168,13 @@ document.addEventListener('DOMContentLoaded', function () {
   async function cleanupStates() {
     try {
       showStatus('Cleaning up states...', 'info');
+      
+      // Disable cleanup button during operation
+      if (cleanupStatesBtn) {
+        cleanupStatesBtn.disabled = true;
+        cleanupStatesBtn.textContent = 'Cleaning...';
+        cleanupStatesBtn.classList.add('loading');
+      }
 
       // Send message to background script to perform cleanup
       chrome.runtime.sendMessage(
@@ -1086,11 +1189,25 @@ document.addEventListener('DOMContentLoaded', function () {
           } else {
             showStatus(`Cleanup failed: ${response.error}`, 'error');
           }
+          
+          // Re-enable cleanup button
+          if (cleanupStatesBtn) {
+            cleanupStatesBtn.disabled = false;
+            cleanupStatesBtn.textContent = 'Cleanup States';
+            cleanupStatesBtn.classList.remove('loading');
+          }
         }
       );
     } catch (error) {
       console.error('Cleanup failed:', error);
       showStatus(`Cleanup failed: ${error.message}`, 'error');
+      
+      // Re-enable cleanup button on error
+      if (cleanupStatesBtn) {
+        cleanupStatesBtn.disabled = false;
+        cleanupStatesBtn.textContent = 'Cleanup States';
+        cleanupStatesBtn.classList.remove('loading');
+      }
     }
   }
 
