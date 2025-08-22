@@ -6,9 +6,15 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="container">
+    <div class="header">
       <h1>Bookmarks Bar Switcher</h1>
+      <div class="header-actions">
+        <button id="saveCurrentState" class="save-btn" title="Save current state manually">💾</button>
+        <button id="popOutBtn" class="pop-out-btn" title="Open in new window">⤢</button>
+      </div>
+    </div>
 
+    <div class="container">
       <!-- First-time setup screen -->
       <div id="firstTimeSetup" class="setup-screen" style="display: none">
         <div class="welcome-message">
@@ -20,6 +26,17 @@
         <div class="setup-form">
           <label for="firstStateName">Name your current bookmarks bar:</label>
           <input type="text" id="firstStateName" placeholder="e.g., Personal, Work, Development" maxlength="50" />
+          
+          <div class="setup-options">
+            <label class="toggle-label">
+              <span class="toggle-text">Dark Mode</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="setupDarkModeToggle">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+          
           <div class="setup-actions">
             <button id="createFirstState" class="primary">Create First State</button>
             <button id="skipSetup" class="secondary">Skip for Now</button>
@@ -29,17 +46,6 @@
 
       <!-- Main interface (hidden until setup is complete) -->
       <div id="mainInterface" style="display: none">
-        <!-- Current State Section -->
-        <div class="current-state">
-          <h3>Current State</h3>
-          <div class="state-input-group">
-            <input type="text" id="currentStateName" placeholder="e.g., Personal, Work, Development" />
-            <button id="saveCurrentState" class="primary">Save Current State</button>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
         <!-- Saved States Section -->
         <div class="saved-states">
           <h3>Saved States</h3>
@@ -57,48 +63,35 @@
           <h3>Settings</h3>
           <div class="setting-item">
             <label class="toggle-label">
-              <input type="checkbox" id="autoSaveToggle" />
-              <span class="toggle-slider"></span>
-              <span class="toggle-text">Auto-save current state</span>
+              <span class="toggle-text">Auto-save every 5 minutes</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="autoSaveToggle" checked>
+                <span class="toggle-slider"></span>
+              </div>
             </label>
           </div>
           <div class="setting-item">
-            <label for="autoSaveInterval">Auto-save interval:</label>
-            <select id="autoSaveInterval">
-              <option value="1">1 minute</option>
-              <option value="5" selected>5 minutes</option>
-              <option value="10">10 minutes</option>
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
-            </select>
+            <label class="toggle-label">
+              <span class="toggle-text">Dark Mode</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
           </div>
+
         </div>
 
         <div class="divider"></div>
 
-        <!-- Keyboard Shortcuts Section -->
+                <!-- Keyboard Shortcuts Section -->
         <div class="keyboard-shortcuts">
           <h3>Keyboard Shortcuts</h3>
-          <div class="shortcut-list">
-            <div class="shortcut-item">
-              <span class="shortcut-key">Ctrl+B →</span>
-              <span class="shortcut-description">Switch to next state</span>
-            </div>
-            <div class="shortcut-item">
-              <span class="shortcut-key">Ctrl+B ←</span>
-              <span class="shortcut-description">Switch to previous state</span>
-            </div>
-            <div class="shortcut-item">
-              <span class="shortcut-key">Ctrl+B ↑</span>
-              <span class="shortcut-description">Quick save current state</span>
-            </div>
-            <div class="shortcut-item">
-              <span class="shortcut-key">Ctrl+B</span>
-              <span class="shortcut-description">Show this popup</span>
-            </div>
-            <div class="shortcut-note">
-              <small>On Mac, use Cmd instead of Ctrl</small>
-            </div>
+          <div class="shortcut-list" id="shortcutList">
+            <!-- Shortcuts will be populated dynamically -->
+          </div>
+          <div class="shortcut-note">
+            <small>On Mac, use Cmd instead of Ctrl</small>
           </div>
         </div>
 
@@ -138,13 +131,36 @@
 
         <div class="divider"></div>
 
+        <!-- Help Section -->
+        <div class="help-section">
+          <h3>💡 Quick Tips</h3>
+          <div class="help-tips">
+            <div class="tip-item">
+              <span class="tip-icon">⌨️</span>
+              <span class="tip-text">Use keyboard shortcuts for faster switching</span>
+            </div>
+            <div class="tip-item">
+              <span class="tip-icon">💾</span>
+              <span class="tip-text">Save button updates the currently active state</span>
+            </div>
+            <div class="tip-item">
+              <span class="tip-icon">⤢</span>
+              <span class="tip-text">Pop out button opens extension in a new window</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
         <!-- Debug Mode Section -->
         <div class="debug-mode">
           <div class="debug-toggle">
             <label class="toggle-label">
-              <input type="checkbox" id="debugModeToggle" />
-              <span class="toggle-slider"></span>
               <span class="toggle-text">Debug Mode</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="debugModeToggle" />
+                <span class="toggle-slider"></span>
+              </div>
             </label>
           </div>
           <div class="debug-options" id="debugOptions" style="display: none">

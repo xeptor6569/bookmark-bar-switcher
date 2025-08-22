@@ -7,19 +7,23 @@ const autoSaveAlarmName = 'bookmarksAutoSave';
 
 // Initialize auto-save settings on startup
 chrome.runtime.onStartup.addListener(async () => {
+  console.log('🚀 Extension starting up...');
   await loadAutoSaveSettings();
   // Temporarily disable aggressive validation on startup to prevent state loss
   // await validateAndCleanupStates();
   console.log('Startup validation disabled - use manual cleanup if needed');
   setupAutoSave();
+  console.log('✅ Extension startup complete');
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
+  console.log('📦 Extension installed/updated...');
   await loadAutoSaveSettings();
   // Temporarily disable aggressive validation on install to prevent state loss
   // await validateAndCleanupStates();
   console.log('Install validation disabled - use manual cleanup if needed');
   setupAutoSave();
+  console.log('✅ Extension install/update complete');
 });
 
 // Load auto-save settings from storage
@@ -527,6 +531,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         )
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
+
+    case 'renameState':
+      renameState(request.oldName, request.newName)
+        .then(result => sendResponse(result))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+
+    case 'popOut':
+      chrome.windows.create({
+        url: chrome.runtime.getURL('popup.html'),
+        type: 'popup',
+        width: 450,
+        height: 700,
+        focused: true
+      }).then(window => {
+        // Send response to close the popup
+        sendResponse({ success: true, windowId: window.id });
+      }).catch(error => {
+        console.error('Error creating pop-out window:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+      return true; // Keep message channel open for async response
+
+    // Handle rename state request
   }
 });
 
@@ -863,6 +891,71 @@ async function deleteState(stateName) {
   } catch (error) {
     console.error('Error deleting state:', error);
     throw new Error('Failed to delete state');
+  }
+}
+
+// Rename a state
+async function renameState(oldName, newName) {
+  try {
+    console.log(`Renaming state from "${oldName}" to "${newName}"`);
+
+    // Validate new name
+    if (!newName || newName.trim().length === 0) {
+      throw new Error('New state name cannot be empty');
+    }
+
+    if (newName.length > 50) {
+      throw new Error('State name cannot exceed 50 characters');
+    }
+
+    const states = await getStoredStates();
+    const stateIndex = states.findIndex(s => s.name === oldName);
+
+    if (stateIndex === -1) {
+      throw new Error('State not found');
+    }
+
+    // Check if new name already exists
+    const existingState = states.find(s => s.name === newName);
+    if (existingState && existingState.name !== oldName) {
+      throw new Error('State with this name already exists');
+    }
+
+    const state = states[stateIndex];
+    const oldFolderName = state.backupFolderName;
+
+    // Rename the backup folder
+    if (state.backupFolderId) {
+      try {
+        await chrome.bookmarks.update(state.backupFolderId, { title: newName });
+        console.log(`Renamed backup folder from "${oldFolderName}" to "${newName}"`);
+      } catch (e) {
+        console.warn('Could not rename backup folder:', e);
+      }
+    }
+
+    // Update state information
+    state.name = newName;
+    state.backupFolderName = newName;
+    state.lastUpdated = new Date().toISOString();
+
+    // Update storage
+    await chrome.storage.sync.set({ bookmarkStates: states });
+
+    // Update current state name if it was renamed
+    const currentStateName = await getCurrentStateName();
+    if (currentStateName === oldName) {
+      await chrome.storage.sync.set({ currentStateName: newName });
+      console.log(`Updated current state name from "${oldName}" to "${newName}"`);
+    }
+
+    return {
+      success: true,
+      message: `State renamed from "${oldName}" to "${newName}" successfully`,
+    };
+  } catch (error) {
+    console.error('Error renaming state:', error);
+    throw new Error(`Failed to rename state: ${error.message}`);
   }
 }
 
@@ -1421,29 +1514,41 @@ async function scanAndRecoverOrphanedStates() {
 // Handle keyboard shortcuts
 chrome.commands.onCommand.addListener(async (command) => {
   try {
-    console.log(`Keyboard shortcut triggered: ${command}`);
+    console.log(`🎯 Keyboard shortcut triggered: ${command}`);
     
     switch (command) {
       case 'switch-to-next-state':
+        console.log('🔄 Switching to next state...');
         await switchToNextState();
         break;
       case 'switch-to-previous-state':
+        console.log('🔄 Switching to previous state...');
         await switchToPreviousState();
         break;
       case 'quick-save-current-state':
+        console.log('💾 Quick saving current state...');
         await quickSaveCurrentState();
         break;
       case 'show-popup':
-        // This will be handled by the browser automatically
-        console.log('Show popup command triggered');
+        console.log('📱 Show popup command triggered');
+        // Create a notification to inform user how to access popup
+        await showNotification('Click the extension icon to open Bookmarks Bar Switcher', 'info');
         break;
       default:
-        console.warn(`Unknown command: ${command}`);
+        console.warn(`⚠️ Unknown command: ${command}`);
     }
   } catch (error) {
-    console.error(`Error handling command ${command}:`, error);
+    console.error(`❌ Error handling command ${command}:`, error);
   }
 });
+
+// Log when keyboard shortcuts are registered
+console.log('🎹 Keyboard shortcuts registered for commands:', [
+  'switch-to-next-state',
+  'switch-to-previous-state', 
+  'quick-save-current-state',
+  'show-popup'
+]);
 
 // Switch to next state in the list
 async function switchToNextState() {
@@ -1525,14 +1630,26 @@ async function quickSaveCurrentState() {
 
     console.log(`Quick saving current state: ${currentStateName}`);
     
-    await saveCurrentState(currentStateName);
+    // Show saving notification
+    await showNotification(`Saving "${currentStateName}" state...`, 'info');
     
-    // Show notification
-    await showNotification(`Quick saved "${currentStateName}" state`);
+    // Perform the save
+    const result = await saveCurrentState(currentStateName);
+    
+    if (result && result.success) {
+      // Show success notification with more details
+      const message = `✅ "${currentStateName}" state saved successfully!`;
+      await showNotification(message, 'success');
+      
+      // Also log to console for debugging
+      console.log(`Quick save completed: ${message}`);
+    } else {
+      throw new Error('Save operation returned no result or failed');
+    }
     
   } catch (error) {
     console.error('Error quick saving current state:', error);
-    await showNotification('Failed to quick save state', 'error');
+    await showNotification(`Failed to quick save state: ${error.message}`, 'error');
   }
 }
 
@@ -1543,18 +1660,26 @@ async function showNotification(message, type = 'info') {
     if (chrome.notifications) {
       const notificationId = `bookmark-switcher-${Date.now()}`;
       
+      // Enhanced notification with better titles and longer display time
+      const title = type === 'error' ? '❌ Bookmarks Bar Switcher Error' :
+                   type === 'warning' ? '⚠️ Bookmarks Bar Switcher Warning' :
+                   type === 'success' ? '✅ Bookmarks Bar Switcher Success' :
+                   'ℹ️ Bookmarks Bar Switcher';
+      
       await chrome.notifications.create(notificationId, {
         type: 'basic',
         iconUrl: 'icons/bbs3_48.png',
-        title: 'Bookmarks Bar Switcher',
+        title: title,
         message: message,
         priority: type === 'error' ? 2 : type === 'warning' ? 1 : 0
       });
       
-      // Auto-remove notification after 3 seconds
+      // Auto-remove notification after 5 seconds (longer for better visibility)
       setTimeout(() => {
         chrome.notifications.clear(notificationId);
-      }, 3000);
+      }, 5000);
+      
+      console.log(`📢 Notification sent [${type}]: ${message}`);
     } else {
       // Fallback to console logging
       console.log(`[${type.toUpperCase()}] ${message}`);
