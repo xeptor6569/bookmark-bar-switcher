@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Show welcome message for first-time users
       if (!result.hasSeenWelcome) {
         setTimeout(() => {
-          showStatus('Welcome! Use Ctrl+B + Arrow keys for quick state switching', 'info');
+          showStatus('Welcome! Use keyboard shortcuts for quick state switching', 'info');
           chrome.storage.sync.set({ hasSeenWelcome: true });
         }, 1000);
       }
@@ -140,6 +140,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Check sync storage status
   checkSyncStatus();
+  
+  // Load keyboard shortcuts
+  loadKeyboardShortcuts();
 
   // First-time setup event listeners
   if (createFirstStateBtn) {
@@ -1384,4 +1387,98 @@ document.addEventListener('DOMContentLoaded', function () {
       loadSavedStates();
     }
   });
+
+  // Load and display keyboard shortcuts dynamically
+  async function loadKeyboardShortcuts() {
+    try {
+      const shortcuts = await chrome.commands.getAll();
+      const shortcutList = document.getElementById('shortcutList');
+      
+      if (!shortcutList) {
+        console.log('Shortcut list element not found');
+        return;
+      }
+
+      // Clear existing content
+      shortcutList.innerHTML = '';
+
+      // Create shortcut items for each command
+      shortcuts.forEach(shortcut => {
+        // Skip internal Chrome commands that shouldn't be displayed
+        if (shortcut.name.startsWith('_') || shortcut.name === 'execute_action') {
+          return;
+        }
+        
+        const shortcutItem = document.createElement('div');
+        shortcutItem.className = 'shortcut-item';
+        
+        const shortcutKey = document.createElement('span');
+        shortcutKey.className = 'shortcut-key';
+        
+        // Format the shortcut text to be more readable
+        let shortcutText = shortcut.shortcut || 'Not assigned';
+        if (shortcutText !== 'Not assigned') {
+          // Replace common key combinations with prettier symbols
+          shortcutText = shortcutText
+            .replace(/Ctrl\+/g, '⌃')
+            .replace(/Command\+/g, '⌘')
+            .replace(/Cmd\+/g, '⌘')
+            .replace(/Shift\+/g, '⇧')
+            .replace(/Alt\+/g, '⌥')
+            .replace(/Up/g, '↑')
+            .replace(/Down/g, '↓')
+            .replace(/Left/g, '←')
+            .replace(/Right/g, '→')
+            .replace(/B/g, 'B')
+            .replace(/S/g, 'S');
+        }
+        
+        shortcutKey.textContent = shortcutText;
+        
+        const shortcutDescription = document.createElement('span');
+        shortcutDescription.className = 'shortcut-description';
+        
+        // Map command names to user-friendly descriptions
+        const descriptions = {
+          'switch-to-next-state': 'Switch to next state',
+          'switch-to-previous-state': 'Switch to previous state',
+          'quick-save-current-state': 'Quick save current state',
+          'show-popup': 'Show this popup'
+        };
+        
+        shortcutDescription.textContent = descriptions[shortcut.name] || shortcut.name;
+        
+        shortcutItem.appendChild(shortcutKey);
+        shortcutItem.appendChild(shortcutDescription);
+        shortcutList.appendChild(shortcutItem);
+      });
+
+      console.log('Keyboard shortcuts loaded:', shortcuts);
+    } catch (error) {
+      console.error('Error loading keyboard shortcuts:', error);
+      
+      // Fallback to static shortcuts if API fails
+      const shortcutList = document.getElementById('shortcutList');
+      if (shortcutList) {
+        shortcutList.innerHTML = `
+          <div class="shortcut-item">
+            <span class="shortcut-key">⇧⌃→</span>
+            <span class="shortcut-description">Switch to next state</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-key">⇧⌃←</span>
+            <span class="shortcut-description">Switch to previous state</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-key">⇧⌃S</span>
+            <span class="shortcut-description">Quick save current state</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-key">⇧⌃B</span>
+            <span class="shortcut-description">Show this popup</span>
+          </div>
+        `;
+      }
+    }
+  }
 });

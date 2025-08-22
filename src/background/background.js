@@ -7,19 +7,23 @@ const autoSaveAlarmName = 'bookmarksAutoSave';
 
 // Initialize auto-save settings on startup
 chrome.runtime.onStartup.addListener(async () => {
+  console.log('🚀 Extension starting up...');
   await loadAutoSaveSettings();
   // Temporarily disable aggressive validation on startup to prevent state loss
   // await validateAndCleanupStates();
   console.log('Startup validation disabled - use manual cleanup if needed');
   setupAutoSave();
+  console.log('✅ Extension startup complete');
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
+  console.log('📦 Extension installed/updated...');
   await loadAutoSaveSettings();
   // Temporarily disable aggressive validation on install to prevent state loss
   // await validateAndCleanupStates();
   console.log('Install validation disabled - use manual cleanup if needed');
   setupAutoSave();
+  console.log('✅ Extension install/update complete');
 });
 
 // Load auto-save settings from storage
@@ -1510,29 +1514,41 @@ async function scanAndRecoverOrphanedStates() {
 // Handle keyboard shortcuts
 chrome.commands.onCommand.addListener(async (command) => {
   try {
-    console.log(`Keyboard shortcut triggered: ${command}`);
+    console.log(`🎯 Keyboard shortcut triggered: ${command}`);
     
     switch (command) {
       case 'switch-to-next-state':
+        console.log('🔄 Switching to next state...');
         await switchToNextState();
         break;
       case 'switch-to-previous-state':
+        console.log('🔄 Switching to previous state...');
         await switchToPreviousState();
         break;
       case 'quick-save-current-state':
+        console.log('💾 Quick saving current state...');
         await quickSaveCurrentState();
         break;
       case 'show-popup':
-        // This will be handled by the browser automatically
-        console.log('Show popup command triggered');
+        console.log('📱 Show popup command triggered');
+        // Create a notification to inform user how to access popup
+        await showNotification('Click the extension icon to open Bookmarks Bar Switcher', 'info');
         break;
       default:
-        console.warn(`Unknown command: ${command}`);
+        console.warn(`⚠️ Unknown command: ${command}`);
     }
   } catch (error) {
-    console.error(`Error handling command ${command}:`, error);
+    console.error(`❌ Error handling command ${command}:`, error);
   }
 });
+
+// Log when keyboard shortcuts are registered
+console.log('🎹 Keyboard shortcuts registered for commands:', [
+  'switch-to-next-state',
+  'switch-to-previous-state', 
+  'quick-save-current-state',
+  'show-popup'
+]);
 
 // Switch to next state in the list
 async function switchToNextState() {
@@ -1614,14 +1630,26 @@ async function quickSaveCurrentState() {
 
     console.log(`Quick saving current state: ${currentStateName}`);
     
-    await saveCurrentState(currentStateName);
+    // Show saving notification
+    await showNotification(`Saving "${currentStateName}" state...`, 'info');
     
-    // Show notification
-    await showNotification(`Quick saved "${currentStateName}" state`);
+    // Perform the save
+    const result = await saveCurrentState(currentStateName);
+    
+    if (result && result.success) {
+      // Show success notification with more details
+      const message = `✅ "${currentStateName}" state saved successfully!`;
+      await showNotification(message, 'success');
+      
+      // Also log to console for debugging
+      console.log(`Quick save completed: ${message}`);
+    } else {
+      throw new Error('Save operation returned no result or failed');
+    }
     
   } catch (error) {
     console.error('Error quick saving current state:', error);
-    await showNotification('Failed to quick save state', 'error');
+    await showNotification(`Failed to quick save state: ${error.message}`, 'error');
   }
 }
 
@@ -1632,18 +1660,26 @@ async function showNotification(message, type = 'info') {
     if (chrome.notifications) {
       const notificationId = `bookmark-switcher-${Date.now()}`;
       
+      // Enhanced notification with better titles and longer display time
+      const title = type === 'error' ? '❌ Bookmarks Bar Switcher Error' :
+                   type === 'warning' ? '⚠️ Bookmarks Bar Switcher Warning' :
+                   type === 'success' ? '✅ Bookmarks Bar Switcher Success' :
+                   'ℹ️ Bookmarks Bar Switcher';
+      
       await chrome.notifications.create(notificationId, {
         type: 'basic',
         iconUrl: 'icons/bbs3_48.png',
-        title: 'Bookmarks Bar Switcher',
+        title: title,
         message: message,
         priority: type === 'error' ? 2 : type === 'warning' ? 1 : 0
       });
       
-      // Auto-remove notification after 3 seconds
+      // Auto-remove notification after 5 seconds (longer for better visibility)
       setTimeout(() => {
         chrome.notifications.clear(notificationId);
-      }, 3000);
+      }, 5000);
+      
+      console.log(`📢 Notification sent [${type}]: ${message}`);
     } else {
       // Fallback to console logging
       console.log(`[${type.toUpperCase()}] ${message}`);
