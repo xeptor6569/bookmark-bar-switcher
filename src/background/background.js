@@ -539,19 +539,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true;
 
     case 'popOut':
-      chrome.windows.create({
-        url: chrome.runtime.getURL('popup.html'),
-        type: 'popup',
-        width: 450,
-        height: 700,
-        focused: true
-      }).then(window => {
-        // Send response to close the popup
-        sendResponse({ success: true, windowId: window.id });
-      }).catch(error => {
-        console.error('Error creating pop-out window:', error);
-        sendResponse({ success: false, error: error.message });
-      });
+      chrome.windows
+        .create({
+          url: chrome.runtime.getURL('popup.html'),
+          type: 'popup',
+          width: 450,
+          height: 700,
+          focused: true,
+        })
+        .then(window => {
+          // Send response to close the popup
+          sendResponse({ success: true, windowId: window.id });
+        })
+        .catch(error => {
+          console.error('Error creating pop-out window:', error);
+          sendResponse({ success: false, error: error.message });
+        });
       return true; // Keep message channel open for async response
 
     case 'importFolderAsState':
@@ -907,7 +910,7 @@ async function deleteState(stateName) {
         // No states left, clear current state and bookmarks bar
         console.log('No states left, clearing current state and bookmarks bar');
         await chrome.storage.sync.remove(['currentStateName']);
-        
+
         // Clear bookmarks bar
         const bookmarksBar = await chrome.bookmarks.getChildren('1');
         for (const bookmark of bookmarksBar) {
@@ -924,7 +927,8 @@ async function deleteState(stateName) {
     return {
       success: true,
       message: `State "${stateName}" deleted successfully`,
-      switchedToState: isActiveState && states.length > 0 ? states[0].name : null,
+      switchedToState:
+        isActiveState && states.length > 0 ? states[0].name : null,
     };
   } catch (error) {
     console.error('Error deleting state:', error);
@@ -966,7 +970,9 @@ async function renameState(oldName, newName) {
     if (state.backupFolderId) {
       try {
         await chrome.bookmarks.update(state.backupFolderId, { title: newName });
-        console.log(`Renamed backup folder from "${oldFolderName}" to "${newName}"`);
+        console.log(
+          `Renamed backup folder from "${oldFolderName}" to "${newName}"`
+        );
       } catch (e) {
         console.warn('Could not rename backup folder:', e);
       }
@@ -984,7 +990,9 @@ async function renameState(oldName, newName) {
     const currentStateName = await getCurrentStateName();
     if (currentStateName === oldName) {
       await chrome.storage.sync.set({ currentStateName: newName });
-      console.log(`Updated current state name from "${oldName}" to "${newName}"`);
+      console.log(
+        `Updated current state name from "${oldName}" to "${newName}"`
+      );
     }
 
     return {
@@ -1027,11 +1035,17 @@ async function copyBookmarkTree(sourceBookmark, targetParentId) {
     );
 
     if (children && children.length > 0) {
-      console.log(`Copying ${children.length} children from "${sourceBookmark.title}" to target ${targetParentId}`);
-      
+      console.log(
+        `Copying ${children.length} children from "${sourceBookmark.title}" to target ${targetParentId}`
+      );
+
       for (const child of children) {
-        console.log(`Processing child: "${child.title}" (type: ${child.url ? 'bookmark' : 'folder'}, hasChildren: ${!!child.children})`);
-        
+        console.log(
+          `Processing child: "${child.title}" (type: ${
+            child.url ? 'bookmark' : 'folder'
+          }, hasChildren: ${!!child.children})`
+        );
+
         if (child.url) {
           // It's a bookmark
           console.log(
@@ -1058,9 +1072,13 @@ async function copyBookmarkTree(sourceBookmark, targetParentId) {
           );
 
           // Recursively copy folder contents
-          console.log(`Recursively copying contents from "${child.title}" to new folder "${newFolder.title}"`);
+          console.log(
+            `Recursively copying contents from "${child.title}" to new folder "${newFolder.title}"`
+          );
           await copyBookmarkTree(child, newFolder.id);
-          console.log(`✓ Folder "${child.title}" and all contents copied successfully`);
+          console.log(
+            `✓ Folder "${child.title}" and all contents copied successfully`
+          );
         }
       }
     } else {
@@ -1557,10 +1575,10 @@ async function scanAndRecoverOrphanedStates() {
 }
 
 // Handle keyboard shortcuts
-chrome.commands.onCommand.addListener(async (command) => {
+chrome.commands.onCommand.addListener(async command => {
   try {
     console.log(`🎯 Keyboard shortcut triggered: ${command}`);
-    
+
     switch (command) {
       case 'switch-to-next-state':
         console.log('🔄 Switching to next state...');
@@ -1577,7 +1595,10 @@ chrome.commands.onCommand.addListener(async (command) => {
       case 'show-popup':
         console.log('📱 Show popup command triggered');
         // Create a notification to inform user how to access popup
-        await showNotification('Click the extension icon to open Bookmarks Bar Switcher', 'info');
+        await showNotification(
+          'Click the extension icon to open Bookmarks Bar Switcher',
+          'info'
+        );
         break;
       default:
         console.warn(`⚠️ Unknown command: ${command}`);
@@ -1590,9 +1611,9 @@ chrome.commands.onCommand.addListener(async (command) => {
 // Log when keyboard shortcuts are registered
 console.log('🎹 Keyboard shortcuts registered for commands:', [
   'switch-to-next-state',
-  'switch-to-previous-state', 
+  'switch-to-previous-state',
   'quick-save-current-state',
-  'show-popup'
+  'show-popup',
 ]);
 
 // Switch to next state in the list
@@ -1617,12 +1638,11 @@ async function switchToNextState() {
 
     const nextState = states[nextStateIndex];
     console.log(`Switching to next state: ${nextState.name}`);
-    
+
     await switchToState(nextState.name);
-    
+
     // Show notification
     await showNotification(`Switched to "${nextState.name}" state`);
-    
   } catch (error) {
     console.error('Error switching to next state:', error);
     await showNotification('Failed to switch to next state', 'error');
@@ -1645,18 +1665,18 @@ async function switchToPreviousState() {
     if (currentStateName) {
       const currentIndex = states.findIndex(s => s.name === currentStateName);
       if (currentIndex >= 0) {
-        prevStateIndex = currentIndex === 0 ? states.length - 1 : currentIndex - 1;
+        prevStateIndex =
+          currentIndex === 0 ? states.length - 1 : currentIndex - 1;
       }
     }
 
     const prevState = states[prevStateIndex];
     console.log(`Switching to previous state: ${prevState.name}`);
-    
+
     await switchToState(prevState.name);
-    
+
     // Show notification
     await showNotification(`Switched to "${prevState.name}" state`);
-    
   } catch (error) {
     console.error('Error switching to previous state:', error);
     await showNotification('Failed to switch to previous state', 'error');
@@ -1674,27 +1694,29 @@ async function quickSaveCurrentState() {
     }
 
     console.log(`Quick saving current state: ${currentStateName}`);
-    
+
     // Show saving notification
     await showNotification(`Saving "${currentStateName}" state...`, 'info');
-    
+
     // Perform the save
     const result = await saveCurrentState(currentStateName);
-    
+
     if (result && result.success) {
       // Show success notification with more details
       const message = `✅ "${currentStateName}" state saved successfully!`;
       await showNotification(message, 'success');
-      
+
       // Also log to console for debugging
       console.log(`Quick save completed: ${message}`);
     } else {
       throw new Error('Save operation returned no result or failed');
     }
-    
   } catch (error) {
     console.error('Error quick saving current state:', error);
-    await showNotification(`Failed to quick save state: ${error.message}`, 'error');
+    await showNotification(
+      `Failed to quick save state: ${error.message}`,
+      'error'
+    );
   }
 }
 
@@ -1704,26 +1726,30 @@ async function showNotification(message, type = 'info') {
     // Try to use chrome.notifications if available
     if (chrome.notifications) {
       const notificationId = `bookmark-switcher-${Date.now()}`;
-      
+
       // Enhanced notification with better titles and longer display time
-      const title = type === 'error' ? '❌ Bookmarks Bar Switcher Error' :
-                   type === 'warning' ? '⚠️ Bookmarks Bar Switcher Warning' :
-                   type === 'success' ? '✅ Bookmarks Bar Switcher Success' :
-                   'ℹ️ Bookmarks Bar Switcher';
-      
+      const title =
+        type === 'error'
+          ? '❌ Bookmarks Bar Switcher Error'
+          : type === 'warning'
+          ? '⚠️ Bookmarks Bar Switcher Warning'
+          : type === 'success'
+          ? '✅ Bookmarks Bar Switcher Success'
+          : 'ℹ️ Bookmarks Bar Switcher';
+
       await chrome.notifications.create(notificationId, {
         type: 'basic',
         iconUrl: 'icons/bbs3_48.png',
         title: title,
         message: message,
-        priority: type === 'error' ? 2 : type === 'warning' ? 1 : 0
+        priority: type === 'error' ? 2 : type === 'warning' ? 1 : 0,
       });
-      
+
       // Auto-remove notification after 5 seconds (longer for better visibility)
       setTimeout(() => {
         chrome.notifications.clear(notificationId);
       }, 5000);
-      
+
       console.log(`📢 Notification sent [${type}]: ${message}`);
     } else {
       // Fallback to console logging
@@ -1737,38 +1763,48 @@ async function showNotification(message, type = 'info') {
 // Import an existing bookmarks folder as a new state
 async function importFolderAsState(folderId, folderName) {
   try {
-    console.log(`Importing folder "${folderName}" (ID: ${folderId}) as new state`);
-    
+    console.log(
+      `Importing folder "${folderName}" (ID: ${folderId}) as new state`
+    );
+
     // Get the folder contents
     const folder = await chrome.bookmarks.getSubTree(folderId);
     if (!folder || !folder[0] || !folder[0].children) {
       throw new Error('Invalid folder structure');
     }
-    
+
     const folderData = folder[0];
-    console.log(`Folder "${folderName}" contains ${folderData.children.length} items`);
-    
+    console.log(
+      `Folder "${folderName}" contains ${folderData.children.length} items`
+    );
+
     // Create a new state with the folder name
     const stateName = await ensureUniqueStateName(folderName);
-    
+
     // Create a backup folder in "Other Bookmarks"
     const backupFolder = await chrome.bookmarks.create({
       parentId: '2', // Other Bookmarks
       title: stateName,
     });
-    
+
     console.log(`Created backup folder: ${backupFolder.id}`);
-    
+
     // Copy all folder contents to the backup folder
     let copiedCount = 0;
     let failedCount = 0;
-    
-    console.log(`Starting to copy ${folderData.children.length} items from "${folderName}"`);
-    
+
+    console.log(
+      `Starting to copy ${folderData.children.length} items from "${folderName}"`
+    );
+
     for (const item of folderData.children) {
       try {
-        console.log(`Processing item: "${item.title}" (type: ${item.url ? 'bookmark' : 'folder'}, hasChildren: ${!!item.children})`);
-        
+        console.log(
+          `Processing item: "${item.title}" (type: ${
+            item.url ? 'bookmark' : 'folder'
+          }, hasChildren: ${!!item.children})`
+        );
+
         if (item.url) {
           // It's a bookmark
           console.log(`Creating bookmark: "${item.title}"`);
@@ -1781,15 +1817,19 @@ async function importFolderAsState(folderId, folderName) {
           console.log(`✓ Bookmark "${item.title}" created successfully`);
         } else if (item.children) {
           // It's a subfolder - copy recursively
-          console.log(`Copying subfolder: "${item.title}" with ${item.children.length} children`);
-          
+          console.log(
+            `Copying subfolder: "${item.title}" with ${item.children.length} children`
+          );
+
           // First create the subfolder
           const newSubfolder = await chrome.bookmarks.create({
             parentId: backupFolder.id,
             title: item.title,
           });
-          console.log(`Created subfolder: "${item.title}" (ID: ${newSubfolder.id})`);
-          
+          console.log(
+            `Created subfolder: "${item.title}" (ID: ${newSubfolder.id})`
+          );
+
           // Then copy all its contents into the new subfolder
           await copyBookmarkTree(item, newSubfolder.id);
           copiedCount++;
@@ -1800,9 +1840,9 @@ async function importFolderAsState(folderId, folderName) {
         failedCount++;
       }
     }
-    
+
     console.log(`Copied ${copiedCount} items, ${failedCount} failed`);
-    
+
     // Add the new state to storage
     const states = await getStoredStates();
     const newState = {
@@ -1810,28 +1850,27 @@ async function importFolderAsState(folderId, folderName) {
       backupFolderId: backupFolder.id,
       backupFolderName: stateName,
       lastUpdated: new Date().toISOString(),
-      importedFrom: folderName
+      importedFrom: folderName,
     };
-    
+
     states.push(newState);
     await chrome.storage.sync.set({ bookmarkStates: states });
-    
+
     // Set as current state
     await chrome.storage.sync.set({ currentStateName: stateName });
-    
+
     // Actually switch to the new state to show the bookmarks
     await switchToState(stateName);
-    
+
     console.log(`Successfully imported folder as state: ${stateName}`);
-    
+
     return {
       success: true,
       message: `Successfully imported "${folderName}" as new state`,
       stateName: stateName,
       copiedCount: copiedCount,
-      failedCount: failedCount
+      failedCount: failedCount,
     };
-    
   } catch (error) {
     console.error('Error importing folder as state:', error);
     throw new Error(`Failed to import folder: ${error.message}`);

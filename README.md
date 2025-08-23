@@ -17,18 +17,18 @@ The extension provides convenient keyboard shortcuts for quick access to common 
 
 | Shortcut | Action | Description |
 |----------|--------|-------------|
-| `Ctrl+Shift+B →` | Next State | Switch to the next bookmark bar state |
-| `Ctrl+Shift+B ←` | Previous State | Switch to the previous bookmark bar state |
-| `Ctrl+Shift+B ↑` | Quick Save | Quickly save the current bookmark bar state |
-| `Ctrl+Shift+B` | Show Popup | Show notification about accessing popup |
+| `Ctrl+Shift+→` | Next State | Switch to the next bookmark bar state |
+| `Ctrl+Shift+←` | Previous State | Switch to the previous bookmark bar state |
+| `Ctrl+Shift+S` | Quick Save | Quickly save the current bookmark bar state |
+| `Ctrl+Shift+B` | Show Popup | Show the Bookmarks Bar Switcher popup |
 
 **Note**: On macOS, use `Cmd` instead of `Ctrl`.
 
 ### Using Keyboard Shortcuts
 
-1. **Navigate States**: Use `Ctrl+Shift+B →` and `Ctrl+Shift+B ←` to cycle through your saved states
-2. **Quick Save**: Press `Ctrl+Shift+B ↑` to instantly save your current bookmarks bar
-3. **Access Popup**: Use `Ctrl+Shift+B` to show a notification about accessing the popup
+1. **Navigate States**: Use `Ctrl+Shift+→` and `Ctrl+Shift+←` to cycle through your saved states
+2. **Quick Save**: Press `Ctrl+Shift+S` to instantly save your current bookmarks bar
+3. **Access Popup**: Use `Ctrl+Shift+B` to show the Bookmarks Bar Switcher popup
 
 Keyboard shortcuts work globally across all tabs and provide desktop notifications for feedback.
 
@@ -46,20 +46,22 @@ bookmark-bar-switcher/
 │   │   └── background.js
 │   ├── icons/           # Extension icons
 │   └── utils/           # Utility functions
-├── dist/                # Built files (generated)
-├── builds/              # Packaged extensions (generated)
-├── tests/               # Test files
-├── scripts/             # Build scripts
-└── docs/                # Documentation
+├── dist/                 # Built files (generated during build)
+├── builds/               # Packaged extensions (generated)
+├── tests/                # Test files
+├── scripts/              # Build scripts
+└── docs/                 # Documentation
 ```
 
-## 🛠️ Development Setup
+## 🛠️**Development** Setup
 
 ### Prerequisites
 
 - **Node.js** 16.0.0 or higher
 - **npm** 8.0.0 or higher
 - **Chrome** browser for testing
+
+> **💡 Quick Install**: If you just want to install and use the extension, jump to [Manual Installation](#-manual-installation) below.
 
 ### Installation
 
@@ -75,16 +77,18 @@ npm install
 npm run postinstall
 ```
 
+**Note**: The build process automatically handles missing directories gracefully. If you need to add custom assets, create an `assets/` directory in the project root.
+
 ## 📦 Build Commands
 
 ### Development
 
 ```bash
-# Watch mode for development
-npm run dev
-
 # Build for development
 npm run build
+
+# Clean build artifacts
+npm run clean
 ```
 
 ### Production
@@ -172,18 +176,20 @@ npm run validate
 1. Build the extension: `npm run build`
 2. Open Chrome/Firefox extensions page
 3. Enable Developer mode
-4. Load unpacked extension from `dist/` folder
+4. Choose one of these options:
+   - **Development**: Load unpacked extension from `dist/` folder
+   - **Distribution**: Use the packaged `builds/chrome.zip` file
 
 ## 🔧 Development Workflow
 
 ### 1. Development
 
 ```bash
-# Start development mode
-npm run dev
+# Build for development
+npm run build
 
 # Make changes to source files
-# Extension automatically reloads
+# Rebuild after changes: npm run build
 ```
 
 ### 2. Testing
@@ -203,7 +209,7 @@ npm run lint
 npm run build
 
 # Package for distribution
-npm run package:chrome
+npm run package
 ```
 
 ### 4. Deployment

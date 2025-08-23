@@ -1,15 +1,10 @@
 {
+  "author": "Cameron Marotto <cameron.marotto@proton.me>",
   "manifest_version": 3,
   "name": "Bookmarks Bar Switcher",
   "version": "0.0.1",
   "description": "Switch between different bookmark bar states (Personal, Work, Development, etc.) with automatic saving",
-  "permissions": [
-    "bookmarks",
-    "storage",
-    "notifications",
-    "windows",
-    "alarms"
-  ],
+  "permissions": ["bookmarks", "storage", "notifications", "windows", "alarms"],
   "host_permissions": [],
   "action": {
     "default_popup": "popup.html",
@@ -54,6 +49,6 @@
     "32": "icons/bbs3_32.png",
     "48": "icons/bbs3_48.png",
     "64": "icons/bbs3_64.png",
-    "128":"icons/bbs3_128.png"
+    "128": "icons/bbs3_128.png"
   }
 }

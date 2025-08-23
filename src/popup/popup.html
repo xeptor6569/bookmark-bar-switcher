@@ -26,17 +26,17 @@
         <div class="setup-form">
           <label for="firstStateName">Name your current bookmarks bar:</label>
           <input type="text" id="firstStateName" placeholder="e.g., Personal, Work, Development" maxlength="50" />
-          
+
           <div class="setup-options">
             <label class="toggle-label">
               <span class="toggle-text">Dark Mode</span>
               <div class="toggle-switch">
-                <input type="checkbox" id="setupDarkModeToggle">
+                <input type="checkbox" id="setupDarkModeToggle" />
                 <span class="toggle-slider"></span>
               </div>
             </label>
           </div>
-          
+
           <div class="setup-actions">
             <button id="createFirstState" class="primary">Create First State</button>
             <button id="skipSetup" class="secondary">Skip for Now</button>
@@ -65,7 +65,7 @@
             <label class="toggle-label">
               <span class="toggle-text">Auto-save every 5 minutes</span>
               <div class="toggle-switch">
-                <input type="checkbox" id="autoSaveToggle" checked>
+                <input type="checkbox" id="autoSaveToggle" checked />
                 <span class="toggle-slider"></span>
               </div>
             </label>
@@ -74,17 +74,16 @@
             <label class="toggle-label">
               <span class="toggle-text">Dark Mode</span>
               <div class="toggle-switch">
-                <input type="checkbox" id="darkModeToggle">
+                <input type="checkbox" id="darkModeToggle" />
                 <span class="toggle-slider"></span>
               </div>
             </label>
           </div>
-
         </div>
 
         <div class="divider"></div>
 
-                <!-- Keyboard Shortcuts Section -->
+        <!-- Keyboard Shortcuts Section -->
         <div class="keyboard-shortcuts">
           <h3>Keyboard Shortcuts</h3>
           <div class="shortcut-list" id="shortcutList">
@@ -100,14 +99,14 @@
         <!-- Data Management Section -->
         <div class="data-management">
           <h3>Data Management</h3>
-          
+
           <!-- Import Folder Section -->
           <div class="import-folder">
             <h4>Import Existing Folder</h4>
             <p class="import-description">Import an existing bookmarks folder to create a new state</p>
             <button id="importFolderBtn" class="data-action-btn primary">Import Folder</button>
           </div>
-          
+
           <div class="export-options" id="exportOptions" style="display: none">
             <div class="export-option">
               <label>

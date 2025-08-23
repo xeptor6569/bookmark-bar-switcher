@@ -132,8 +132,8 @@ We may update this Privacy Policy from time to time. We will notify you of any c
 
 If you have any questions about this Privacy Policy or our data practices, please contact us:
 
-- **Email**: [Your Contact Email]
-- **GitHub**: [Your GitHub Repository]
+- **Email**: cameron.marotto@proton.me
+- **GitHub**: https://github.com/xeptor6569/bookmark-bar-switcher
 - **Chrome Web Store**: [Extension Store Page]
 
 ## Data Protection Rights (GDPR)
